@@ -1,10 +1,9 @@
-// lib/email.js
 import nodemailer from "nodemailer";
 
 export async function sendEmail({ to, subject, html }) {
   // SMTP 연결 설정
   const transporter = nodemailer.createTransport({
-    service: "gmail", // 또는 'naver', 'outlook', 'smtp.mailgun.org' 등
+    service: "gmail",
     auth: {
       user: process.env.SMTP_USER, // 보내는 이메일 주소
       pass: process.env.SMTP_PASS, // 앱 비밀번호

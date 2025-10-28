@@ -1,7 +1,5 @@
-import * as React from "react";
 import Image from "next/image";
 
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Carousel,
   CarouselContent,
@@ -27,18 +25,14 @@ export function MainCarousel() {
         {images.map((image, index) => (
           <CarouselItem key={index} className="pl-1 md:basis-1/2 lg:basis-1/3">
             <div className="p-4">
-              <Card>
-                <CardContent className="flex aspect-square items-center justify-center">
-                  <Image
-                    src={image}
-                    alt={`Slide ${index + 1}`}
-                    width={800}
-                    height={800}
-                    className="h-full w-full object-cover"
-                    priority={index === 0}
-                  />
-                </CardContent>
-              </Card>
+              <Image
+                src={image}
+                alt={`Slide ${index + 1}`}
+                width={400}
+                height={400}
+                className="h-full w-full object-cover rounded-lg"
+                priority={index === 0}
+              />
             </div>
           </CarouselItem>
         ))}

@@ -6,7 +6,7 @@ export async function POST(request) {
     const { fileName, fileType } = await request.json();
 
     // 파일 타입 검증
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
     if (!allowedTypes.includes(fileType)) {
       return NextResponse.json(
         { error: "지원하지 않는 파일 형식입니다." },

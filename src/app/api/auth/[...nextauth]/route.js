@@ -57,6 +57,7 @@ export const authOptions = {
   },
   callbacks: {
     async signIn({ account, profile }) {
+      console.log("signIn callback:", profile);
       if (account?.provider === "credentials") {
         return true; // 크리덴셜 로그인은 그냥 통과
       }

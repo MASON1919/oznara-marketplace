@@ -4,8 +4,8 @@ import { Providers } from "./providers";
 import Footer from "@/components/Footer";
 
 export const metadata = {
-  title: "OZ Marketplace",
-  description: "안전하고 편리한 중고거래 플랫폼 OZ Marketplace",
+  title: "오즈나라 마켓플레이스",
+  description: "안전하고 편리한 중고거래 플랫폼 오즈나라 마켓플레이스입니다.",
 };
 
 export default function RootLayout({ children }) {

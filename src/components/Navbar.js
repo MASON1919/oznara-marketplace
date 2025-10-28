@@ -1,9 +1,17 @@
 "use client";
 
-import * as React from "react";
 import Link from "next/link";
-import { CircleCheckIcon, CircleHelpIcon, CircleIcon } from "lucide-react";
+import {
+  CircleCheckIcon,
+  CircleHelpIcon,
+  CircleIcon,
+  SearchIcon,
+} from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 import {
   NavigationMenu,
@@ -17,13 +25,38 @@ import {
 
 export function Navbar() {
   const { data: session } = useSession();
-
+  const router = useRouter();
+  const [query, setQuery] = useState("");
+  const onSubmit = (e) => {
+    e.preventDefault();
+    const q = query.trim();
+    if (!q) return;
+    router.push(`/search?query=${encodeURIComponent(q)}&page=1`);
+  };
   return (
     <div className="flex w-full justify-between bg-white p-4 shadow">
       <div>
-        <Link href="/">TEAM 1</Link>
+        <Link href="/">오즈나라</Link>
       </div>
       <div>
+        <form
+          onSubmit={onSubmit}
+          className="flex w-[40vw] items-center gap-2 mb-4"
+        >
+          <div className="relative flex-1">
+            <SearchIcon className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="검색어를 입력하세요"
+              className="pl-9"
+              autoComplete="off"
+            />
+          </div>
+          <Button type="submit" variant="default">
+            검색
+          </Button>
+        </form>
         <NavigationMenu viewport={false}>
           <NavigationMenuList>
             <NavigationMenuItem>
@@ -40,7 +73,7 @@ export function Navbar() {
                 asChild
                 className={navigationMenuTriggerStyle()}
               >
-                <Link href="/">찜한 상품</Link>
+                <Link href="/my/likes">찜한 상품</Link>
               </NavigationMenuLink>
             </NavigationMenuItem>
 
@@ -76,12 +109,15 @@ export function Navbar() {
       </div>
       <div>
         {session?.user ? (
-          <button
-            className="cursor-pointer"
-            onClick={() => signOut({ callbackUrl: "/" })}
-          >
-            Logout
-          </button>
+          <div className="flex items-center gap-4">
+            <Link href="/upload">판매하기 | </Link>
+            <button
+              className="cursor-pointer"
+              onClick={() => signOut({ callbackUrl: "/" })}
+            >
+              Logout
+            </button>
+          </div>
         ) : (
           <>
             <Link href="/login">Login </Link>
