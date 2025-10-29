@@ -23,6 +23,9 @@ export default async function ListingPage({ params }) {
         : false,
     },
   });
+  if (listingInfo.likes === undefined) {
+    listingInfo.likes = [];
+  }
   const s3Urls = listingInfo.listingImages.map((image) =>
     getS3Url(image.s3Key)
   );
