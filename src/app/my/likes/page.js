@@ -3,8 +3,8 @@ import { getS3Url } from "@/lib/s3";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { redirect } from "next/navigation";
-import Image from "next/image";
-import Link from "next/link";
+import LikedItemsList from "@/components/LikedItemsList";
+
 export default async function LikesPage() {
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -31,7 +31,7 @@ export default async function LikesPage() {
       },
     },
   });
-  //likes, listingImages는 배열, listing은 배열 아님 -> likes[].listing.listingImages[] 이런식으로 접근
+
   const s3Urls = likes.map((like) => {
     return getS3Url(like.listing.listingImages[0]?.s3Key);
   });
@@ -43,37 +43,10 @@ export default async function LikesPage() {
       </h1>
       {!likes.length && (
         <div className="py-20 text-center text-gray-500">
-          찜한 상품이 없습니다.
+          찜 한 상품이 없습니다.
         </div>
       )}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 p-4">
-        {likes.map((item, index) => (
-          <Link href={`/listings/${item.listing.id}`} key={index}>
-            <div
-              key={index}
-              className="rounded-2xl overflow-hidden border hover:shadow-lg transition-shadow bg-white"
-            >
-              <div className="aspect-square bg-gray-100">
-                <Image
-                  src={s3Urls[index]}
-                  alt={item.listing.title}
-                  className="w-full h-full object-cover"
-                  width={300}
-                  height={300}
-                />
-              </div>
-              <div className="p-3">
-                <p className="text-sm font-medium text-gray-800 line-clamp-1">
-                  {item.listing.title}
-                </p>
-                <p className="text-base font-semibold text-gray-900 mt-1">
-                  {Number(item.listing.price).toLocaleString()}원
-                </p>
-              </div>
-            </div>
-          </Link>
-        ))}
-      </div>
+      <LikedItemsList likes={likes} s3Urls={s3Urls} />
     </div>
   );
 }
