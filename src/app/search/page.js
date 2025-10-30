@@ -11,9 +11,9 @@ export default async function SearchPage({ searchParams }) {
   const sp = await searchParams;
   const query = sp.query || "";
   const page = parseInt(sp.page) || 1;
-  const category = sp.category || "";
-  const minPrice = sp.minPrice ? parseInt(sp.minPrice) : 0;
-  const maxPrice = sp.maxPrice ? parseInt(sp.maxPrice) : 100_000_000;
+  const category = sp.category || "all";
+  const minPrice = parseInt(sp.minPrice) || undefined;
+  const maxPrice = parseInt(sp.maxPrice) || undefined;
 
   const listings = await prisma.listing.findMany({
     include: {
@@ -59,13 +59,15 @@ export default async function SearchPage({ searchParams }) {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold my-6 px-4">"{query}" 검색 결과</h2>
       <Filter
         initialQuery={query}
         initialCategory={category}
         initialMinPrice={minPrice}
         initialMaxPrice={maxPrice}
       />
+      <h2 className="text-2xl font-bold my-6 px-4">
+        {query ? `"${query}" 검색 결과` : ""}
+      </h2>
       <SearchResults listings={listingsWithLikeStatus} s3Urls={s3Urls} />
       <PaginationBar currentPage={page} />
     </div>
