@@ -26,11 +26,9 @@ export default async function ListingPage({ params }) {
         : false,
     },
   });
-
-  if (!listingInfo) {
-    return <div>상품 정보를 찾을 수 없습니다</div>;
+  if (listingInfo.likes === undefined) {
+    listingInfo.likes = [];
   }
-
   const s3Urls = listingInfo.listingImages.map((image) =>
     getS3Url(image.s3Key)
   );
