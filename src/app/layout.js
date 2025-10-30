@@ -2,7 +2,7 @@ import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { Providers } from "./providers";
 import Footer from "@/components/Footer";
-import LikesBootstrap from "@/components/initialization/LikesBootstrap";
+import RecentlyViewed from "../components/RecentlyViewed";
 
 export const metadata = {
   title: "오즈나라 마켓플레이스",
@@ -18,7 +18,7 @@ export default function RootLayout({ children }) {
             <Navbar />
           </header>
           <main>{children}</main>
-          <LikesBootstrap />
+          <RecentlyViewed />
           <Footer />
         </Providers>
       </body>
