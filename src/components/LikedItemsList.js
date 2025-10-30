@@ -1,56 +1,74 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Heart } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "../lib/utils";
+import { useLikeStore } from "../store/useLikeStore";
 
 export default function LikedItemsList({ likes, s3Urls }) {
-  const [likedItems, setLikedItems] = useState(
-    likes.reduce((acc, item) => {
-      acc[item.listing.id] = true;
-      return acc;
-    }, {})
+  // ============================================
+  // Zustand store 사용
+  // ============================================
+  const favorites = useLikeStore((state) => state.favorites);
+  const initializeFavorites = useLikeStore(
+    (state) => state.initializeFavorites
   );
+  const toggleFavorite = useLikeStore((state) => state.toggleFavorite);
+
   const [removingItems, setRemovingItems] = useState(new Set());
 
+  // ============================================
+  // likes 데이터로 store 초기화
+  // ============================================
+  useEffect(() => {
+    // likes 데이터를 listings 형태로 변환
+    const listingsData = likes.map((like) => ({
+      id: like.listing.id,
+      isLiked: true, // 찜 페이지는 모두 true
+    }));
+    initializeFavorites(listingsData);
+  }, [likes, initializeFavorites]);
+
+  // ============================================
+  // 좋아요 토글 + 애니메이션
+  // ============================================
   const handleLike = async (e, listingId) => {
     e.preventDefault();
     e.stopPropagation();
 
-    const newState = !likedItems[listingId];
-    setLikedItems((prev) => ({ ...prev, [listingId]: newState }));
+    const wasLiked = favorites[listingId];
 
-    try {
-      await fetch("/api/like/toggle", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ listingId, like: newState }),
-        cache: "no-store",
-      });
+    // Zustand로 좋아요 토글
+    await toggleFavorite(listingId);
 
-      // 좋아요 해제 시 부드럽게 사라지는 애니메이션
-      if (!newState) {
-        setRemovingItems((prev) => new Set([...prev, listingId]));
-        // 애니메이션 후 DOM에서 제거
-        setTimeout(() => {
-          setRemovingItems((prev) => {
-            const next = new Set(prev);
-            next.delete(listingId);
-            return next;
-          });
-        }, 300);
-      }
-    } catch (error) {
-      console.error("찜 요청 실패:", error);
-      setLikedItems((prev) => ({ ...prev, [listingId]: !newState }));
+    // 좋아요 해제 시 애니메이션
+    if (wasLiked) {
+      setRemovingItems((prev) => new Set([...prev, listingId]));
+      setTimeout(() => {
+        setRemovingItems((prev) => {
+          const next = new Set(prev);
+          next.delete(listingId);
+          return next;
+        });
+      }, 300);
     }
   };
 
-  // 제거된 아이템 필터링
+  // ============================================
+  // 좋아요 해제된 아이템 필터링
+  // ============================================
   const visibleLikes = likes.filter(
-    (item) => likedItems[item.listing.id] !== false
+    (item) => favorites[item.listing.id] !== false
   );
+
+  if (visibleLikes.length === 0) {
+    return (
+      <div className="py-20 text-center text-gray-500">
+        찜한 상품이 없습니다.
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 p-4">
@@ -78,19 +96,20 @@ export default function LikedItemsList({ likes, s3Urls }) {
                   width={300}
                   height={300}
                 />
+
                 {/* 좋아요 버튼 */}
                 <button
                   onClick={(e) => handleLike(e, item.listing.id)}
                   className={cn(
                     "absolute bottom-2 right-2 p-2 rounded-full bg-white/90 backdrop-blur-sm border shadow-sm hover:bg-white transition-all",
-                    likedItems[item.listing.id] && "text-red-500 border-red-300"
+                    favorites[item.listing.id] && "text-red-500 border-red-300"
                   )}
                   aria-label="찜"
                 >
                   <Heart
                     className={cn(
                       "h-4 w-4",
-                      likedItems[item.listing.id] && "fill-current"
+                      favorites[item.listing.id] && "fill-current"
                     )}
                   />
                 </button>
