@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useEffect } from "react";
 import { cn } from "@/lib/utils";
 import {
   Card,
@@ -12,9 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Accordion,
   AccordionContent,
@@ -22,86 +20,50 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Heart, MapPin, Truck, ChevronRight } from "lucide-react";
+import { Heart, MapPin, Truck } from "lucide-react";
+import { useLikeStore } from "../../store/useLikeStore";
 
 export default function PurchaseForm({ listingInfo, initialLike }) {
-  console.log("Initial Like:", initialLike);
-  const [shippingFee, setShippingFee] = useState(0);
-  const [notes, setNotes] = useState("");
-  const [fav, setFav] = useState(false);
-  const [totalPrice, setTotalPrice] = useState(listingInfo.price);
-  const [location, setLocation] = useState("");
-  const [condition, setCondition] = useState("used");
-  const [method, setMethod] = useState(listingInfo.method);
+  // ============================================
+  // Zustand store에서 상태와 액션 가져오기
+  // ============================================
+  const favorites = useLikeStore((state) => state.favorites);
+  const setFavorite = useLikeStore((state) => state.setFavorite);
+  const toggleFavorite = useLikeStore((state) => state.toggleFavorite);
 
-  const desiredRef = useRef(initialLike);
-  const timerRef = useRef(null);
-  const controllerRef = useRef(null);
-
+  // ============================================
+  // 초기 좋아요 상태 설정
+  // ============================================
   useEffect(() => {
-    if (method === "Delivery") setMethod("택배거래");
-    else if (method === "Direct") setMethod("직거래");
-    else setMethod("택배거래 혹은 직거래");
-  }, []);
+    // 서버에서 받은 initialLike로 store 초기화
+    setFavorite(listingInfo.id, initialLike);
+  }, [listingInfo.id, initialLike, setFavorite]);
 
-  // 디바운스로 클릭 연타하는거 막기
-  const scheduleUpdate = () => {
-    clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(sendRequest, 1000);
+  // 현재 상품의 좋아요 상태
+  const isLiked = favorites[listingInfo.id] || false;
+
+  // ============================================
+  // 거래 방법 한글 변환
+  // ============================================
+  const getMethodText = (method) => {
+    if (method === "Delivery") return "택배거래";
+    if (method === "Direct") return "직거래";
+    return "택배거래 혹은 직거래";
   };
 
-  const sendRequest = async () => {
-    clearTimeout(timerRef.current);
-    timerRef.current = null;
-
-    controllerRef.current?.abort();
-    controllerRef.current = new AbortController();
-
-    const like = desiredRef.current;
-
-    try {
-      await fetch("/api/like/toggle", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ listingId: listingInfo.id, like }),
-        signal: controllerRef.current.signal,
-        cache: "no-store",
-      });
-    } catch (error) {
-      console.error("찜 요청 실패:", error);
-      // 실패 시 롤백
-      const rollback = !like;
-      setFav(rollback);
-      desiredRef.current = rollback;
-    }
+  // ============================================
+  // 좋아요 토글 핸들러
+  // ============================================
+  const handleFavorite = async () => {
+    await toggleFavorite(listingInfo.id);
   };
 
-  const handleFavorite = () => {
-    const next = !desiredRef.current;
-    desiredRef.current = next;
-    setFav(next); // UI 즉시 반영
-    scheduleUpdate(); // 네트워크 요청은 디바운스
-  };
-
+  // ============================================
+  // 구매하기 핸들러
+  // ============================================
   const handleBuy = () => {
-    onSubmit &&
-      onSubmit({
-        title,
-        price,
-        method,
-        shippingFee,
-        location,
-        condition,
-        notes,
-        totalPrice,
-      });
+    // 구매 로직 구현
+    console.log("구매하기 클릭");
   };
 
   return (
@@ -115,7 +77,6 @@ export default function PurchaseForm({ listingInfo, initialLike }) {
         </div>
         <CardDescription className="text-sm text-muted-foreground">
           <span>3분 전</span>
-          {/* 임시로 하드코딩*/}
           <span className="mx-2">·</span>
           <span>조회 {listingInfo.viewCount}</span>
           <span className="mx-2">·</span>
@@ -135,13 +96,14 @@ export default function PurchaseForm({ listingInfo, initialLike }) {
             <AccordionTrigger className="text-base font-semibold">
               <div className="flex items-center gap-2">
                 <Badge variant="secondary" className="rounded-md">
-                  {method}
+                  {getMethodText(listingInfo.method)}
                 </Badge>
               </div>
             </AccordionTrigger>
             <AccordionContent className="pb-4">
               <div className="grid gap-5">
-                {method !== "직거래" && (
+                {/* 택배거래 */}
+                {listingInfo.method !== "Direct" && (
                   <div className="rounded-xl border p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 font-medium">
@@ -150,7 +112,6 @@ export default function PurchaseForm({ listingInfo, initialLike }) {
                       </div>
                       <RadioGroup
                         value={listingInfo.method}
-                        onValueChange={(v) => setMethod(v)}
                         className="flex gap-4"
                       >
                         <div className="flex items-center space-x-2">
@@ -176,11 +137,11 @@ export default function PurchaseForm({ listingInfo, initialLike }) {
                 )}
 
                 {/* 직거래 */}
-                {method !== "택배거래" && (
+                {listingInfo.method !== "Delivery" && (
                   <div
                     className={cn(
                       "rounded-xl border p-4",
-                      listingInfo.method === "direct" && "ring-1 ring-ring/30"
+                      listingInfo.method === "Direct" && "ring-1 ring-ring/30"
                     )}
                   >
                     <div className="flex items-center justify-between">
@@ -190,7 +151,6 @@ export default function PurchaseForm({ listingInfo, initialLike }) {
                       </div>
                       <RadioGroup
                         value={listingInfo.method}
-                        onValueChange={(v) => setMethod(v)}
                         className="flex gap-4"
                       >
                         <div className="flex items-center space-x-2">
@@ -228,6 +188,9 @@ export default function PurchaseForm({ listingInfo, initialLike }) {
       </CardContent>
 
       <CardFooter className="flex items-center gap-3">
+        {/* ============================================
+            좋아요 버튼 (Zustand로 관리)
+            ============================================ */}
         <Button
           type="button"
           variant="ghost"
@@ -236,12 +199,10 @@ export default function PurchaseForm({ listingInfo, initialLike }) {
           onClick={handleFavorite}
           className={cn(
             "rounded-full border",
-            desiredRef.current && "text-red-500 border-red-300"
+            isLiked && "text-red-500 border-red-300"
           )}
         >
-          <Heart
-            className={cn("h-5 w-5", desiredRef.current && "fill-current")}
-          />
+          <Heart className={cn("h-5 w-5", isLiked && "fill-current")} />
         </Button>
         <Button
           type="button"

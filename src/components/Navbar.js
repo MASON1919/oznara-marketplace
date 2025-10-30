@@ -34,7 +34,7 @@ export function Navbar() {
     router.push(`/search?query=${encodeURIComponent(q)}&page=1`);
   };
   return (
-    <div className="flex w-full justify-between bg-white p-4 shadow">
+    <div className="flex w-full justify-between bg-white p-4 shadow relative z-100">
       <div>
         <Link href="/">오즈나라</Link>
       </div>
@@ -67,6 +67,81 @@ export function Navbar() {
                 <Link href="/">홈</Link>
               </NavigationMenuLink>
             </NavigationMenuItem>
+            <NavigationMenuItem>
+              <NavigationMenuTrigger>카테고리</NavigationMenuTrigger>
+              <NavigationMenuContent>
+                <ul className="grid w-[200px] gap-4">
+                  <li>
+                    <NavigationMenuLink asChild>
+                      <Link
+                        href={{
+                          pathname: "/search",
+                          query: { category: "Electronics" },
+                        }}
+                        className="flex-row items-center gap-2"
+                      >
+                        디지털/가전
+                      </Link>
+                    </NavigationMenuLink>
+                    <NavigationMenuLink asChild>
+                      <Link
+                        href={{
+                          pathname: "/search",
+                          query: { category: "Furniture" },
+                        }}
+                        className="flex-row items-center gap-2"
+                      >
+                        가구/인테리어
+                      </Link>
+                    </NavigationMenuLink>
+                    <NavigationMenuLink asChild>
+                      <Link
+                        href={{
+                          pathname: "/search",
+                          query: { category: "Clothing" },
+                        }}
+                        className="flex-row items-center gap-2"
+                      >
+                        패션/잡화
+                      </Link>
+                    </NavigationMenuLink>
+                    <NavigationMenuLink asChild>
+                      <Link
+                        href={{
+                          pathname: "/search",
+                          query: { category: "Sports" },
+                        }}
+                        className="flex-row items-center gap-2"
+                      >
+                        스포츠/레저
+                      </Link>
+                    </NavigationMenuLink>
+                    <NavigationMenuLink asChild>
+                      <Link
+                        href={{
+                          pathname: "/search",
+                          query: { category: "Books" },
+                        }}
+                        className="flex-row items-center gap-2"
+                      >
+                        도서/취미/게임
+                      </Link>
+                    </NavigationMenuLink>
+                    <NavigationMenuLink asChild>
+                      <Link
+                        href={{
+                          pathname: "/search",
+                          query: { category: "Others" },
+                        }}
+                        className="flex-row items-center gap-2"
+                      >
+                        기타
+                      </Link>
+                    </NavigationMenuLink>
+                  </li>
+                </ul>
+              </NavigationMenuContent>
+            </NavigationMenuItem>
 
             <NavigationMenuItem>
               <NavigationMenuLink
@@ -75,34 +150,6 @@ export function Navbar() {
               >
                 <Link href="/my/likes">찜한 상품</Link>
               </NavigationMenuLink>
-            </NavigationMenuItem>
-
-            <NavigationMenuItem>
-              <NavigationMenuTrigger>카테고리</NavigationMenuTrigger>
-              <NavigationMenuContent>
-                <ul className="grid w-[200px] gap-4">
-                  <li>
-                    <NavigationMenuLink asChild>
-                      <Link href="#" className="flex-row items-center gap-2">
-                        <CircleHelpIcon />
-                        수입명품
-                      </Link>
-                    </NavigationMenuLink>
-                    <NavigationMenuLink asChild>
-                      <Link href="#" className="flex-row items-center gap-2">
-                        <CircleIcon />
-                        패션의류
-                      </Link>
-                    </NavigationMenuLink>
-                    <NavigationMenuLink asChild>
-                      <Link href="#" className="flex-row items-center gap-2">
-                        <CircleCheckIcon />
-                        패션잡화
-                      </Link>
-                    </NavigationMenuLink>
-                  </li>
-                </ul>
-              </NavigationMenuContent>
             </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>
