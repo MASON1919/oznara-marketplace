@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,9 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
+import { X } from "lucide-react";
 
+const UNSET = -1;
 const CATEGORIES = [
   { label: "전체", slug: "all" },
   { label: "디지털/가전", slug: "Electronics" },
@@ -36,51 +38,77 @@ export default function Filter({
   const router = useRouter();
 
   const [category, setCategory] = useState(initialCategory || "");
-  const [minPrice, setMinPrice] = useState(initialMinPrice || 0);
-  const [maxPrice, setMaxPrice] = useState(initialMaxPrice || 0);
-
-  // 가격 입력 보정
-  const normalizeRange = (min, max) => {
-    let a = Math.max(PRICE_MIN, Math.min(min, PRICE_MAX));
-    let b = Math.max(PRICE_MIN, Math.min(max, PRICE_MAX));
-    if (a > b) [a, b] = [b, a];
-    return [a, b];
-  };
-
-  const onChangeMin = (e) => {
-    const v = Number(e.target.value.replaceAll(",", ""));
-    const [a, b] = normalizeRange(Number.isFinite(v) ? v : PRICE_MIN, maxPrice);
-    setMinPrice(a);
-    setMaxPrice(b); // min이 커져서 max보다 커질 때 swap
-  };
-
-  const onChangeMax = (e) => {
-    const v = Number(e.target.value.replaceAll(",", ""));
-    const [a, b] = normalizeRange(minPrice, Number.isFinite(v) ? v : PRICE_MAX);
-    setMinPrice(a);
-    setMaxPrice(b); // max이 작아져 min보다 작아질 때 swap
-  };
-
+  const [minPrice, setMinPrice] = useState(
+    Number.isFinite(initialMinPrice) ? initialMinPrice : UNSET
+  );
+  const [maxPrice, setMaxPrice] = useState(
+    Number.isFinite(initialMaxPrice) ? initialMaxPrice : UNSET
+  );
   const resetFilters = () => {
     setCategory("");
     setMinPrice(PRICE_MIN);
     setMaxPrice(PRICE_MIN);
   };
 
-  const applyFilters = () => {
+  const pushWithState = ({
+    category: nextCat = category,
+    min: nextMin = minPrice,
+    max: nextMax = maxPrice,
+  } = {}) => {
     const params = new URLSearchParams();
     params.set("page", "1");
-    if (category) params.set("category", category);
-    if (minPrice !== PRICE_MIN) params.set("minPrice", String(minPrice));
-    if (maxPrice !== PRICE_MAX) params.set("maxPrice", String(maxPrice));
+    if (nextCat && nextCat !== "all") params.set("category", nextCat);
+    if (nextMin !== UNSET) params.set("minPrice", String(nextMin));
+    if (nextMax !== UNSET) params.set("maxPrice", String(nextMax));
     if (initialQuery) params.set("query", initialQuery);
     router.push(`/search?${params.toString()}`);
   };
+  const applyFilters = () => pushWithState();
+  // 칩에서 지우기 핸들러
+  const clearCategory = () => {
+    setCategory("");
+    pushWithState({ category: "" });
+  };
+  const clearMin = () => {
+    setMinPrice(UNSET);
+    pushWithState({ min: UNSET });
+  };
+  const clearMax = () => {
+    setMaxPrice(UNSET);
+    pushWithState({ max: UNSET });
+  };
 
+  const selectedCategoryLabel = useMemo(() => {
+    if (!category || category === "all") return "";
+    return CATEGORIES.find((c) => c.slug === category)?.label ?? category;
+  }, [category]);
+
+  const onKeyDownApply = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      applyFilters();
+    }
+  };
+  const Chip = ({ children, onClick, ariaLabel }) => (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={ariaLabel}
+      className="inline-flex items-center rounded-full border bg-gray-50/60 px-3 py-1 text-xs hover:bg-gray-100 transition-colors"
+    >
+      <span className="mr-1">{children}</span>
+      <X className="h-3 w-3" />
+    </button>
+  );
   return (
-    <div className="w-full max-w-3xl rounded-xl border p-4 shadow-sm bg-white mx-auto mb-6">
+    <div className="w-full max-w-3xl rounded-xl border p-4 shadow-sm bg-white mx-auto mb-6 mt-4">
+      <div className="mb-2 flex items-center justify-between">
+        <h3 className="text-base font-semibold">검색 필터</h3>
+      </div>
+
+      <Separator className="my-3" />
+
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        {/* 카테고리 */}
         <div className="space-y-2">
           <Label>카테고리</Label>
           <Select value={category} onValueChange={setCategory}>
@@ -97,47 +125,73 @@ export default function Filter({
           </Select>
         </div>
 
-        {/* 최소 가격 */}
         <div className="space-y-2">
           <Label>최소 가격 (원)</Label>
           <Input
             inputMode="numeric"
-            value={minPrice.toString()}
-            onChange={onChangeMin}
-            placeholder="0"
+            value={minPrice !== UNSET ? minPrice.toString() : ""}
+            onChange={(e) => {
+              setMinPrice(e.target.value);
+            }}
+            onKeyDown={onKeyDownApply}
+            placeholder="최소 가격"
           />
         </div>
 
-        {/* 최대 가격 */}
         <div className="space-y-2">
           <Label>최대 가격 (원)</Label>
           <Input
             inputMode="numeric"
-            value={maxPrice.toString()}
-            onChange={onChangeMax}
-            placeholder={PRICE_MAX.toString()}
+            value={maxPrice !== UNSET ? maxPrice.toString() : ""}
+            onChange={(e) => {
+              setMaxPrice(e.target.value);
+            }}
+            onKeyDown={onKeyDownApply}
+            placeholder="최대 가격"
           />
         </div>
       </div>
-      {/*선택한 필터 */}
-      <div className="mt-4 text-sm text-gray-600">
-        선택한 필터: {category && <span>카테고리: {category}</span>}
-        {minPrice !== PRICE_MIN && (
-          <span>최소 가격: {minPrice.toLocaleString("ko-KR")}원</span>
-        )}
-        {maxPrice !== PRICE_MAX && (
-          <span>최대 가격: {maxPrice.toLocaleString("ko-KR")}원</span>
-        )}
+
+      <Separator className="my-4" />
+
+      <div className="text-sm">
+        <div className="mb-2 font-medium">선택한 필터</div>
+        <div className="flex flex-wrap items-center gap-2 min-h-[32px]">
+          {selectedCategoryLabel && (
+            <Chip onClick={clearCategory} ariaLabel="카테고리 제거">
+              카테고리: {selectedCategoryLabel}
+            </Chip>
+          )}
+          {minPrice !== UNSET && (
+            <Chip onClick={clearMin} ariaLabel="최소 가격 제거">
+              최소 {minPrice.toLocaleString("ko-KR")}원
+            </Chip>
+          )}
+          {maxPrice !== UNSET && (
+            <Chip onClick={clearMax} ariaLabel="최대 가격 제거">
+              최대 {maxPrice.toLocaleString("ko-KR")}원
+            </Chip>
+          )}
+
+          {!(
+            selectedCategoryLabel ||
+            minPrice !== UNSET ||
+            maxPrice !== UNSET
+          ) && <span className="text-gray-500">선택한 필터가 없습니다.</span>}
+        </div>
       </div>
 
-      {/* 액션 */}
-      <div className="mt-6 flex items-center gap-2">
-        <Button variant="secondary" type="button" onClick={resetFilters}>
-          초기화
-        </Button>
-        <Button type="button" onClick={applyFilters}>
-          적용하기
-        </Button>
+      <Separator className="my-4" />
+
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 justify-end w-full">
+          <Button variant="secondary" type="button" onClick={resetFilters}>
+            초기화
+          </Button>
+          <Button type="button" onClick={applyFilters}>
+            적용하기
+          </Button>
+        </div>
       </div>
     </div>
   );

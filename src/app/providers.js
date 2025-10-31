@@ -1,7 +1,12 @@
-"use client";
+'use client';
 
 import { SessionProvider } from "next-auth/react";
+import { ChatProvider } from "@/components/chatcontext/ChatContext";
 
 export function Providers({ children }) {
-  return <SessionProvider>{children}</SessionProvider>;
+  return (
+    <SessionProvider>
+      <ChatProvider>{children}</ChatProvider>
+    </SessionProvider>
+  );
 }

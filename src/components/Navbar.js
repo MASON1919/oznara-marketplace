@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import Link from "next/link";
 import {
@@ -12,6 +12,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useChat } from "@/components/chatcontext/ChatContext";
+import { Badge } from "@/components/ui/badge";
 
 import {
   NavigationMenu,
@@ -25,6 +27,7 @@ import {
 
 export function Navbar() {
   const { data: session } = useSession();
+  const { unreadChatsCount } = useChat();
   const router = useRouter();
   const [query, setQuery] = useState("");
   const onSubmit = (e) => {
@@ -157,7 +160,20 @@ export function Navbar() {
       <div>
         {session?.user ? (
           <div className="flex items-center gap-4">
-            <Link href="/upload">판매하기 | </Link>
+            <Link href="/upload">판매하기</Link>
+            <span className="text-gray-300">|</span>
+            <Link href="/my/chats" className="relative">
+              내 채팅
+              {unreadChatsCount > 0 && (
+                <Badge
+                  variant="destructive"
+                  className="absolute -right-5 -top-2 h-5 w-5 flex items-center justify-center rounded-full text-xs"
+                >
+                  {unreadChatsCount}
+                </Badge>
+              )}
+            </Link>
+            <span className="text-gray-300">|</span>
             <button
               className="cursor-pointer"
               onClick={() => signOut({ callbackUrl: "/" })}
