@@ -3,6 +3,7 @@ import { Navbar } from "@/components/Navbar";
 import { Providers } from "./providers";
 import Footer from "@/components/Footer";
 import RecentlyViewed from "../components/RecentlyViewed";
+import { Toaster } from "@/components/ui/sonner";
 
 export const metadata = {
   title: "오즈나라 마켓플레이스",
@@ -14,6 +15,7 @@ export default function RootLayout({ children }) {
     <html lang="ko">
       <body>
         <Providers>
+          <Toaster richColors position="top-right" />
           <header>
             <Navbar />
           </header>
