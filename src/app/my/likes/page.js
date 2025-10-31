@@ -12,7 +12,7 @@ export default async function LikesPage() {
   }
   const userId = session.user.id;
   const likes = await prisma.like.findMany({
-    where: { userId },
+    where: { userId: userId },
     orderBy: { createdAt: "desc" },
     select: {
       createdAt: true,

@@ -31,6 +31,7 @@ export default async function SearchPage({ searchParams }) {
         : false,
     },
     where: {
+      deleted: false,
       title: {
         contains: query,
         mode: "insensitive",

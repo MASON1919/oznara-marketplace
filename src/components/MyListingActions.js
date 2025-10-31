@@ -35,20 +35,37 @@ export default function MyListings({ myListings = [], s3Urls = [] }) {
   const onDelete = async (id) => {
     setPendingId(id);
     try {
-      const res = await fetch(`/api/listings/${id}`, { method: "DELETE" });
+      //userId를 담은 쿼리스트링 생성
+      const res = await fetch(`/api/listing?id=${id}`, {
+        method: "DELETE",
+      });
       if (!res.ok) {
-        toast("게시물 삭제에 실패했습니다.", {
+        toast("알림", {
           description: "삭제에 실패했습니다.",
           action: {
             label: "닫기",
             onClick: () => console.log("닫기 클릭됨"),
           },
         });
+        return;
       }
       startTransition(() => router.refresh());
+      toast("알림", {
+        description: "삭제에 성공했습니다.",
+        action: {
+          label: "닫기",
+          onClick: () => console.log("닫기 클릭됨"),
+        },
+      });
     } catch (e) {
       console.error(e);
-      toast("게시물 삭제에 실패했습니다.", { type: "error" });
+      toast("알림", {
+        description: "삭제에 실패했습니다.",
+        action: {
+          label: "닫기",
+          onClick: () => console.log("닫기 클릭됨"),
+        },
+      });
     } finally {
       setPendingId(null);
     }
@@ -128,7 +145,7 @@ export default function MyListings({ myListings = [], s3Urls = [] }) {
                         onClick={() => onDelete(item.id)}
                         disabled={deleting}
                       >
-                        삭제 확인
+                        확인
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>

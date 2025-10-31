@@ -15,7 +15,7 @@ export default async function MyListings() {
     );
   }
   const myListings = await prisma.listing.findMany({
-    where: { userId: userId },
+    where: { userId: userId, deleted: false },
     orderBy: { createdAt: "desc" },
     take: 10,
     include: {

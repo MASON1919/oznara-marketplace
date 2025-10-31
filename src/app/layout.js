@@ -15,7 +15,7 @@ export default function RootLayout({ children }) {
     <html lang="ko">
       <body>
         <Providers>
-          <Toaster richColors position="top-right" />
+          <Toaster richColors position="top-center" />
           <header>
             <Navbar />
           </header>
