@@ -8,7 +8,7 @@ import ListingCarousel from "@/components/ListingPage/ListingCarousel";
 import PurchaseForm from "@/components/ListingPage/PurchaseForm";
 
 import ListingDescription from "@/components/ListingPage/ListingDescription";
-import ChatButton from "@/components/ChatButton"; // 새로 추가된 채팅 버튼 컴포넌트
+import ChatButton from "@/components/chat/ChatButton"; // 새로 추가된 채팅 버튼 컴포넌트
 
 // 상품 상세 페이지 컴포넌트입니다. 서버 컴포넌트로 동작합니다.
 

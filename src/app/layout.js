@@ -3,6 +3,7 @@ import { Navbar } from "@/components/Navbar";
 import { Providers } from "./providers";
 import Footer from "@/components/Footer";
 import RecentlyViewed from "../components/RecentlyViewed";
+import { KakaoMapsScriptProvider } from "@/context/KakaoMapsScriptProvider";
 
 export const metadata = {
   title: "오즈나라 마켓플레이스",
@@ -13,14 +14,16 @@ export default function RootLayout({ children }) {
   return (
     <html lang="ko">
       <body>
-        <Providers>
-          <header>
-            <Navbar />
-          </header>
-          <main>{children}</main>
-          <RecentlyViewed />
-          <Footer />
-        </Providers>
+        <KakaoMapsScriptProvider>
+          <Providers>
+            <header>
+              <Navbar />
+            </header>
+            <main>{children}</main>
+            <RecentlyViewed />
+            <Footer />
+          </Providers>
+        </KakaoMapsScriptProvider>
       </body>
     </html>
   );

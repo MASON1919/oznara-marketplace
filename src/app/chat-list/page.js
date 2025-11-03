@@ -1,6 +1,6 @@
 'use client';
 
-import { useChat } from '@/components/chatcontext/ChatContext';
+import { useChat } from '@/components/chat/ChatContext';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -64,7 +64,7 @@ export default function MyChatsPage() {
           {sortedChats.map((chat) => {
             const unread = isUnread(chat);
             return (
-              <Link href={`/chat/${chat.id}`} key={chat.id}>
+              <Link href={`/chatroom/${chat.id}`} key={chat.id}>
                 <div className={`block p-6 border rounded-lg shadow-sm hover:shadow-md transition-shadow ${
                   unread ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
                 }`}>

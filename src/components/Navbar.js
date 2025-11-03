@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useChat } from "@/components/chatcontext/ChatContext";
+import { useChat } from "@/components/chat/ChatContext";
 import { Badge } from "@/components/ui/badge";
 
 import {
@@ -162,7 +162,7 @@ export function Navbar() {
           <div className="flex items-center gap-4">
             <Link href="/upload">판매하기</Link>
             <span className="text-gray-300">|</span>
-            <Link href="/my/chats" className="relative">
+            <Link href="/chat-list" className="relative">
               내 채팅
               {unreadChatsCount > 0 && (
                 <Badge
