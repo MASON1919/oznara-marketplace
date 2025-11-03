@@ -70,6 +70,10 @@ export default function MyListings({ myListings = [], s3Urls = [] }) {
       setPendingId(null);
     }
   };
+  // 내 정보 페이지에서 내 게시물 클릭 시 해당 게시물로 이동
+  const handleProductClick = (listingId) => {
+    router.push(`/listings/${listingId}`);
+  };
 
   if (!myListings.length) {
     return (
@@ -94,9 +98,15 @@ export default function MyListings({ myListings = [], s3Urls = [] }) {
         {myListings.map((item, idx) => {
           const cover = s3Urls[idx] ?? "/placeholder.png"; // placeholder는 프로젝트에 맞게
           const deleting = pendingId === item.id || isPending;
-
+          {
+            /* Card 클릭시 handleProductClick 추가함 */
+          }
           return (
-            <Card key={item.id} className="overflow-hidden">
+            <Card
+              key={item.id}
+              className="overflow-hidden cursor-pointer"
+              onClick={() => handleProductClick(item.id)}
+            >
               <div className="relative aspect-[4/3]">
                 <Image
                   src={cover}
@@ -127,7 +137,12 @@ export default function MyListings({ myListings = [], s3Urls = [] }) {
                 {/* 수정 버튼이 필요하면 여기 추가 */}
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="destructive" size="sm" disabled={deleting}>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      disabled={deleting}
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       {deleting ? "삭제 중..." : "삭제"}
                     </Button>
                   </AlertDialogTrigger>

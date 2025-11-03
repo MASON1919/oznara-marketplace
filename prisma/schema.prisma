@@ -26,7 +26,8 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   likedListings Like[]
-
+  transactionsAsBuyer  Transaction[] @relation("buyerTransactions")
+  transactionsAsSeller Transaction[] @relation("sellerTransactions")
   listings       Listing[]
 }
 
@@ -52,6 +53,25 @@ enum Method{
   Delivery
   Both
 }
+enum TransactionStatus{
+  Pending
+  Completed
+  Canceled
+}
+// 판매자가 예약 설정할 수 있게, 구매자가 거래완료 처리할 수 있게
+model Transaction{
+  id        String   @id @default(cuid())
+  listingId String
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  buyerId   String
+  buyer     User    @relation("buyerTransactions", fields: [buyerId], references: [id], onDelete: Cascade)
+  sellerId  String
+  seller    User    @relation("sellerTransactions", fields: [sellerId], references: [id], onDelete: Cascade)
+  status    TransactionStatus @default(Pending)
+  transactionDate DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
 
 model Listing{
   id        String   @id @default(cuid())
@@ -69,8 +89,11 @@ model Listing{
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   viewCount Int      @default(0)
   likeCount Int      @default(0)
+  transaction Transaction[]
   likes Like[]
 }
+
+
 
 model ListingImage{
   id        String   @id @default(cuid())
