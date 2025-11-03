@@ -59,7 +59,7 @@ export default function LikedItemsList({ likes, s3Urls }) {
   // 좋아요 해제된 아이템 필터링
   // ============================================
   const visibleLikes = likes.filter(
-    (item) => favorites[item.listing.id] !== false
+    (item) => favorites[item.listing.id] !== false && !item.listing.deleted
   );
 
   if (visibleLikes.length === 0) {

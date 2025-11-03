@@ -7,6 +7,7 @@ import { ChevronLeft } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { signOut } from "next-auth/react";
 
 const REASONS = [
     { id: "lowUsage", label: "사용 빈도가 낮고 개인정보 및 보안 우려" },
@@ -30,7 +31,7 @@ export default function DeleteAccountPanel({ onClose }) {
         if (checked.length === 0) return;
 
         try {
-            const res = await fetch("/api/user/delete-account", {
+            const res = await fetch("/api/users/delete-account", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ reasons: checked, detail }),
@@ -38,6 +39,7 @@ export default function DeleteAccountPanel({ onClose }) {
 
             if (res.ok) {
                 alert("탈퇴 요청이 정상적으로 접수되었습니다.");
+                await signOut({ callbackUrl: "/" });
                 // 로그아웃 또는 리다이렉트 처리 가능
             } else {
                 alert("탈퇴 요청 중 오류가 발생했습니다.");

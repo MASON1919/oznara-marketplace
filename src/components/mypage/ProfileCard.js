@@ -154,6 +154,20 @@ export default function ProfilePanel() {
                     </DialogContent>
                 </Dialog>
 
+
+                <Dialog open={shareOpen} onOpenChange={setShareOpen}>
+                    <DialogContent className="w-[350px] h-[200px]">
+                        <DialogHeader className="mt-4">
+                            <DialogTitle className="flex justify-center">공유하기</DialogTitle>
+                        </DialogHeader>
+                        <div className="flex justify-center gap-4">
+                            <CircleButton><MessageCircle /></CircleButton>
+                            <CircleButton><Facebook /></CircleButton>
+                            <CircleButton onClick={shareLink}><Copy /></CircleButton>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+
                 {/* 공유 모달 */}
                 <Dialog open={shareOpen} onOpenChange={setShareOpen}>
                     <DialogContent className="w-[350px] h-[200px]">

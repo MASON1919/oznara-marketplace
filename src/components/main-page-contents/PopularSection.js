@@ -3,6 +3,7 @@ import { getS3Url } from "@/lib/s3";
 import PopularCarousel from "./PopularCarousel";
 export default async function PopularSection() {
   const popularListings = await prisma.listing.findMany({
+    where: { deleted: false },
     orderBy: { viewCount: "desc" },
     take: 12,
     include: {

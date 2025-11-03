@@ -4,6 +4,7 @@ import { Providers } from "./providers";
 import Footer from "@/components/Footer";
 import RecentlyViewed from "../components/RecentlyViewed";
 import { KakaoMapsScriptProvider } from "@/context/KakaoMapsScriptProvider";
+import { Toaster } from "@/components/ui/sonner";
 
 export const metadata = {
   title: "오즈나라 마켓플레이스",
@@ -16,6 +17,7 @@ export default function RootLayout({ children }) {
       <body>
         <KakaoMapsScriptProvider>
           <Providers>
+          <Toaster richColors position="top-center" />
             <header>
               <Navbar />
             </header>

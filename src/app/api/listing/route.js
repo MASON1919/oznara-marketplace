@@ -48,3 +48,37 @@ export async function POST(request) {
     });
   }
 }
+export async function DELETE(request) {
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get("id");
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id;
+  if (!session) {
+    return new Response(JSON.stringify({ message: "Unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+  const listing = await prisma.listing.findUnique({
+    where: { id: id },
+  });
+  if (!listing || listing.userId !== userId) {
+    return new Response(JSON.stringify({ message: "Forbidden" }), {
+      status: 404,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+  try {
+    await prisma.listing.update({
+      where: { id: id },
+      data: { deleted: true, deletedAt: new Date() },
+    });
+    return new Response(null, { status: 204 });
+  } catch (error) {
+    console.error("Error deleting listing:", error);
+    return new Response(JSON.stringify({ message: "Internal Server Error" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+}

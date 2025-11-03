@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import Link from "next/link";
 import {
@@ -160,6 +160,7 @@ export function Navbar() {
       <div>
         {session?.user ? (
           <div className="flex items-center gap-4">
+            <Link href="/mypage">내 정보</Link>
             <Link href="/upload">판매하기</Link>
             <span className="text-gray-300">|</span>
             <Link href="/chat-list" className="relative">

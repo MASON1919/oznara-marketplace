@@ -10,7 +10,7 @@ export default function SalesPanel({ onClose }) {
                 <SheetClose className="absolute top-4 left-4 cursor-pointer">
                     <ChevronLeft />
                 </SheetClose>
-                <SheetHeader>
+                <SheetHeader className="flex justify-between items-center p-3">
                     <SheetTitle className="mt-1 text-lg">판매내역</SheetTitle>
                 </SheetHeader>
                 <div className="p-4 overflow-y-auto h-full">
