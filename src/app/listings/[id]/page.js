@@ -6,14 +6,9 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 // 컴포넌트들을 import 합니다.
 import ListingCarousel from "@/components/ListingPage/ListingCarousel";
 import PurchaseForm from "@/components/ListingPage/PurchaseForm";
-
 import ListingDescription from "@/components/ListingPage/ListingDescription";
 import ChatButton from "@/components/chat/ChatButton"; // 새로 추가된 채팅 버튼 컴포넌트
-
-// 상품 상세 페이지 컴포넌트입니다. 서버 컴포넌트로 동작합니다.
-
 import RecentlyViewedTracker from "@/components/ListingPage/RecentlyViewedTracker"; // 추가
-
 
 export default async function ListingPage({ params }) {
   // URL 파라미터에서 상품 ID를 가져옵니다.
@@ -23,10 +18,8 @@ export default async function ListingPage({ params }) {
   // 로그인된 사용자의 ID를 가져오거나, 로그인되지 않았다면 null로 설정합니다.
   const userId = session?.user?.id ?? null;
 
-
   // Prisma를 사용하여 데이터베이스에서 상품 정보를 가져옵니다.
   // 상품 이미지와 사용자의 좋아요 여부도 함께 포함합니다.
-
 
   const listingInfo = await prisma.listing.findUnique({
     where: { id },
@@ -35,7 +28,8 @@ export default async function ListingPage({ params }) {
         select: { s3Key: true },
       },
       likes: userId
-        ? { // 사용자가 로그인되어 있다면 좋아요 여부를 확인합니다.
+        ? {
+            // 사용자가 로그인되어 있다면 좋아요 여부를 확인합니다.
             where: { userId: userId },
             select: { userId: true },
             take: 1,
@@ -43,7 +37,6 @@ export default async function ListingPage({ params }) {
         : false, // 로그인되어 있지 않다면 좋아요 정보를 가져오지 않습니다.
     },
   });
-
 
   // S3 키를 사용하여 이미지 URL을 생성합니다.
 
@@ -78,7 +71,7 @@ export default async function ListingPage({ params }) {
         </div>
         {/* 상품 설명 컴포넌트 */}
         <ListingDescription description={listingInfo.description} />
-        
+
         {/* 채팅 버튼 컴포넌트: 상품 설명 아래에 위치하며, 판매자 ID를 전달합니다. */}
         <div className="mt-8">
           <ChatButton sellerId={listingInfo.userId} />
@@ -104,5 +97,4 @@ export default async function ListingPage({ params }) {
       />
     </div>
   );
-
 }
