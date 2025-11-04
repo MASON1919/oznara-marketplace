@@ -1,34 +1,48 @@
-
 'use client';
 
-import { createContext, useState, useContext } from 'react';
+import { createContext, useState, useContext, useEffect } from 'react';
 
-// 스크립트 로딩 상태를 위한 Context 생성
-const KakaoMapsScriptContext = createContext(null);
+const KakaoMapsScriptContext = createContext({ isLoaded: false });
 
-/**
- * 카카오맵 SDK 스크립트의 로딩 상태를 제공하는 Provider 컴포넌트입니다.
- * @param {object} props - 컴포넌트 props
- * @param {React.ReactNode} props.children - 이 Provider로 감쌀 자식 컴포넌트들
- */
 export function KakaoMapsScriptProvider({ children }) {
   const [isLoaded, setIsLoaded] = useState(false);
 
+  useEffect(() => {
+    const existingScript = document.querySelector(`script[src*="//dapi.kakao.com/v2/maps/sdk.js"]`);
+
+    if (existingScript) {
+        // 스크립트가 이미 로드되어 있다면, 로드 상태만 true로 설정
+        window.kakao.maps.load(() => {
+            setIsLoaded(true);
+        });
+        return;
+    }
+
+    const script = document.createElement('script');
+    script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_MAPS_APP_KEY}&libraries=services&autoload=false`;
+    script.async = true;
+    document.head.appendChild(script);
+
+    script.onload = () => {
+      window.kakao.maps.load(() => {
+        setIsLoaded(true);
+        console.log("Kakao Maps SDK loaded.");
+      });
+    };
+
+    script.onerror = () => {
+        console.error("Error loading Kakao Maps SDK.");
+    }
+
+  }, []);
+
   return (
-    <KakaoMapsScriptContext.Provider value={{ isLoaded, setIsLoaded }}>
+    <KakaoMapsScriptContext.Provider value={{ isLoaded }}>
       {children}
     </KakaoMapsScriptContext.Provider>
   );
 }
 
-/**
- * 카카오맵 스크립트 로딩 상태를 사용하기 위한 커스텀 훅입니다.
- * @returns {{isLoaded: boolean, setIsLoaded: Function}} 스크립트 로딩 상태와 상태 변경 함수
- */
 export function useKakaoMapsScript() {
-  const context = useContext(KakaoMapsScriptContext);
-  if (context === null) {
-    throw new Error('useKakaoMapsScript must be used within a KakaoMapsScriptProvider');
-  }
-  return context;
+  return useContext(KakaoMapsScriptContext);
 }
