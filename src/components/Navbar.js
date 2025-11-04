@@ -37,7 +37,7 @@ export function Navbar() {
     router.push(`/search?query=${encodeURIComponent(q)}&page=1`);
   };
   return (
-    <div className="flex w-full justify-between bg-white p-4 shadow relative z-100">
+    <div className="flex w-full justify-between bg-white p-4 shadow relative">
       <div>
         <Link href="/">오즈나라</Link>
       </div>

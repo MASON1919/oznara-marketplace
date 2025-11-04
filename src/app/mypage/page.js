@@ -8,6 +8,10 @@ import MyListings from "@/components/MyListings";
 export default async function MyPageComplete() {
   const session = await getServerSession(authOptions);
 
+  if (!session) {
+    return <div className="p-6">로그인이 필요합니다.</div>;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="flex">
