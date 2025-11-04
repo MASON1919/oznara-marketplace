@@ -1,8 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
+// 💡 useSession에서 update 함수를 구조 분해 할당으로 가져옵니다.
+import { useSession, signOut } from "next-auth/react";
+import { Loader2 } from "lucide-react"; // 로딩 아이콘 추가
 
+// 컴포넌트 라이브러리 임포트
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,10 +20,10 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Share2, Copy, Facebook, MessageCircle } from "lucide-react";
-import { signOut } from 'next-auth/react';
 
 export default function ProfilePanel() {
-    const { data: session, status } = useSession();
+    // 💡 update 함수 추가
+    const { data: session, status, update } = useSession();
     const [tab, setTab] = useState("messages");
     const [shareOpen, setShareOpen] = useState(false);
     const [editOpen, setEditOpen] = useState(false);
@@ -29,42 +32,95 @@ export default function ProfilePanel() {
     // 닉네임/자기소개 상태 초기화
     const [nickname, setNickname] = useState("");
     const [bio, setBio] = useState("");
+    // 💡 프로필 저장 관련 상태 추가
+    const [editError, setEditError] = useState(null);
+    const [editMessage, setEditMessage] = useState(null);
+    const [isSaving, setIsSaving] = useState(false);
+    const [shareMessage, setShareMessage] = useState(null);
 
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [newConfirm, setNewConfirm] = useState("");
-    const [error, setError] = useState(null); // 에러 메시지 상태
+    const [error, setError] = useState(null); // 비밀번호 변경 에러 메시지 상태
+    const [isChangingPassword, setIsChangingPassword] = useState(false); // 비밀번호 변경 로딩 상태
+
 
     useEffect(() => {
         if (session?.user) {
             setNickname(session.user.name || "");
             setBio(session.user.bio || "");
         }
-    }, [session]);
+        // 성공 메시지는 잠시 후 사라지게 처리
+        if (editMessage || shareMessage) {
+            const timer = setTimeout(() => {
+                setEditMessage(null);
+                setShareMessage(null);
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [session, editMessage, shareMessage]);
+
 
     if (status === "loading") return <p>로딩중...</p>;
+    // 💡 update 함수가 세션 객체에 존재하지 않을 경우를 대비하여 세션 유효성 검사 순서를 유지합니다.
     if (!session) return <p>로그인이 필요합니다.</p>;
 
     const trustLevel = 68;
     const trustMax = 100;
 
+
     const handleSave = async () => {
-        // 서버에 실제 업데이트 API 호출 필요
-        // await fetch("/api/user/update", { ... })
+        setEditError(null);
+        setEditMessage(null);
+        setIsSaving(true);
 
-        // 임시 로컬 세션 업데이트
-        session.user.name = nickname;
-        session.user.bio = bio;
+        if (!nickname.trim()) {
+            setEditError("닉네임은 필수입니다.");
+            setIsSaving(false);
+            return;
+        }
 
-        setEditOpen(false);
+        try {
+            const res = await fetch("/api/users/update-profile", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    name: nickname,
+                }),
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                // 🔥 세션 업데이트 (화면에서 바로 반영됨)
+                await update({
+                    user: {
+                        ...session.user,
+                        name: data.user.name,
+                    },
+                });
+                setEditMessage("닉네임이 변경되었습니다.");
+                setEditOpen(false);
+            } else {
+                setEditError(data.error || "닉네임 변경 실패");
+            }
+        } catch (err) {
+            console.error("닉네임 저장 중 오류:", err);
+            setEditError("네트워크 오류가 발생했습니다.");
+        } finally {
+            setIsSaving(false);
+        }
     };
+    // --------------------------------------------------------
 
     const handleChangePassword = async () => {
         setError(null); // 에러 초기화
+        setIsChangingPassword(true);
 
         // 1차 클라이언트 검증 (Zod 스키마의 refine 로직 중 일부)
         if (newPassword !== newConfirm) {
             setError("새 비밀번호가 일치하지 않습니다.");
+            setIsChangingPassword(false);
             return;
         }
 
@@ -76,8 +132,6 @@ export default function ProfilePanel() {
                 body: JSON.stringify({
                     currentPassword,
                     newPassword,
-                    // 서버는 newConfirm을 필요로 하지 않을 수 있지만, 
-                    // Zod 스키마가 refine 로직에서 사용한다면 전송합니다.
                     newConfirm
                 }),
             });
@@ -99,12 +153,20 @@ export default function ProfilePanel() {
         } catch (err) {
             console.error("비밀번호 변경 중 네트워크 오류:", err);
             setError("네트워크 오류가 발생했습니다. 서버 상태를 확인해 주세요.");
+        } finally {
+            setIsChangingPassword(false);
         }
     };
 
     const shareLink = () => {
-        navigator.clipboard.writeText(window.location.href);
-        alert("URL이 복사되었습니다!");
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(window.location.href)
+                .then(() => setShareMessage("URL이 클립보드에 복사되었습니다!"))
+                .catch(() => setShareMessage("URL 복사에 실패했습니다."));
+        } else {
+            setShareMessage("브라우저에서 클립보드 접근을 지원하지 않습니다.");
+        }
+        setShareOpen(false);
     };
 
     return (
@@ -112,6 +174,15 @@ export default function ProfilePanel() {
             <h1 className="flex w-full text-2xl font-bold mb-4">
                 안녕하세요, {session.user?.name || "OOO"}님
             </h1>
+
+            {/* 💡 전역 메시지 표시 (성공/공유 메시지) */}
+            {(editMessage || shareMessage) && (
+                <div className={`p-3 mb-4 text-sm rounded-lg ${editMessage ? 'text-green-700 bg-green-100' : 'text-blue-700 bg-blue-100'
+                    }`}>
+                    {editMessage || shareMessage}
+                </div>
+            )}
+
             {/* 프로필 카드 */}
             <div className="flex gap-4 h-[350px]">
                 <Card className="flex-1 p-2 h-full">
@@ -123,7 +194,7 @@ export default function ProfilePanel() {
                                 {session.user?.image ? (
                                     <AvatarImage src={session.user.image} alt={session.user.name ?? "프로필"} />
                                 ) : (
-                                    <AvatarFallback>{session.user?.name?.[0] ?? "U"}</AvatarFallback>
+                                    <AvatarFallback className="bg-blue-500 text-white font-black">{session.user?.name?.[0] ?? "U"}</AvatarFallback>
                                 )}
                             </Avatar>
                             <div className="flex flex-col p-1 ml-3">
@@ -154,7 +225,7 @@ export default function ProfilePanel() {
 
                         {/* 자기소개 */}
                         <p className="text-xs text-gray-500 text-center">
-                            {bio || "자기 소개 작성하고 신뢰도를 높여 보세요."}
+                            {session.user?.bio || "자기 소개 작성하고 신뢰도를 높여 보세요."}
                         </p>
 
                         {/* 버튼 */}
@@ -197,11 +268,17 @@ export default function ProfilePanel() {
                                 }}
                                 className="focus-visible:ring-0 focus-visible:border-input"
                             />
+
+                            {/* 에러 메시지 표시 */}
+                            {editError && (
+                                <p className="text-sm text-red-500">{editError}</p>
+                            )}
+
                             <Button
                                 onClick={handleSave}
-                                disabled={!nickname} // 닉네임이 없으면 비활성화
+                                disabled={!nickname.trim() || isSaving} // 닉네임이 없거나 저장 중이면 비활성화
                             >
-                                저장
+                                {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : '저장'}
                             </Button>
                             <p className="text-xs text-gray-500">
                                 {bio.length}/25
@@ -211,21 +288,7 @@ export default function ProfilePanel() {
                 </Dialog>
 
 
-                <Dialog open={shareOpen} onOpenChange={setShareOpen}>
-                    <DialogContent className="w-[350px] h-[200px]">
-                        <DialogHeader className="mt-4">
-                            <DialogTitle className="flex justify-center">공유하기</DialogTitle>
-                        </DialogHeader>
-                        <div className="flex justify-center gap-4">
-                            <CircleButton><MessageCircle /></CircleButton>
-                            <CircleButton><Facebook /></CircleButton>
-                            <CircleButton onClick={shareLink}><Copy /></CircleButton>
-                        </div>
-                    </DialogContent>
-                </Dialog>
-
-
-                {/* 💡 비밀번호 변경 모달 추가 */}
+                {/* 비밀번호 변경 모달 */}
                 <Dialog open={passwordOpen} onOpenChange={setPasswordOpen}>
                     <DialogContent className="sm:max-w-md sm:mx-auto">
                         <DialogHeader>
@@ -268,9 +331,9 @@ export default function ProfilePanel() {
                         <DialogFooter className="mt-4">
                             <Button
                                 onClick={handleChangePassword}
-                                disabled={!currentPassword || !newPassword || !newConfirm || newPassword.length < 8}
+                                disabled={!currentPassword || !newPassword || !newConfirm || newPassword.length < 8 || isChangingPassword}
                             >
-                                비밀번호 변경
+                                {isChangingPassword ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : '비밀번호 변경'}
                             </Button>
                         </DialogFooter>
                         <p className="text-xs text-gray-500">
@@ -282,11 +345,11 @@ export default function ProfilePanel() {
 
                 {/* 공유 모달 */}
                 <Dialog open={shareOpen} onOpenChange={setShareOpen}>
-                    <DialogContent className="w-[350px] h-[200px]">
+                    <DialogContent className="w-[350px]">
                         <DialogHeader className="mt-4">
                             <DialogTitle className="flex justify-center">공유하기</DialogTitle>
                         </DialogHeader>
-                        <div className="flex justify-center gap-4">
+                        <div className="flex justify-center gap-4 py-5">
                             <CircleButton><MessageCircle /></CircleButton>
                             <CircleButton><Facebook /></CircleButton>
                             <CircleButton onClick={shareLink}><Copy /></CircleButton>
@@ -323,8 +386,12 @@ export default function ProfilePanel() {
                             </Card>
                         ))}
                     </TabPanel>
-                    <TabPanel value="notifications">...</TabPanel>
-                    <TabPanel value="inquiry">...</TabPanel>
+                    <TabPanel value="notifications">
+                        <div className="text-center text-gray-500 p-8">새로운 알림이 없습니다.</div>
+                    </TabPanel>
+                    <TabPanel value="inquiry">
+                        <div className="text-center text-gray-500 p-8">접수된 문의 내역이 없습니다.</div>
+                    </TabPanel>
                 </Tabs>
             </div>
         </div>
@@ -336,7 +403,8 @@ function CircleButton({ children, onClick }) {
     return (
         <button
             onClick={onClick}
-            className="w-15 h-15 bg-gray-200 rounded-full flex items-center justify-center"
+            // 💡 w-14 h-14 (56px) 사용 및 hover 효과 추가
+            className="w-14 h-14 bg-gray-200 hover:bg-gray-300 rounded-full flex items-center justify-center transition-colors shadow-md"
         >
             {children}
         </button>
@@ -345,8 +413,10 @@ function CircleButton({ children, onClick }) {
 
 function TabPanel({ value, children }) {
     return (
-        <TabsContent value={value} className="flex-1 overflow-hidden">
-            <div className="overflow-y-auto h-full space-y-2 pr-2 box-border">{children}</div>
+        <TabsContent value={value} className="flex-1 overflow-hidden data-[state=inactive]:hidden">
+            <div className="overflow-y-auto h-[270px] space-y-2 pr-2 box-border">
+                {children}
+            </div>
         </TabsContent>
     );
 }

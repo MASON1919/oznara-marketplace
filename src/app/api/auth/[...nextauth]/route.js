@@ -61,6 +61,23 @@ export const authOptions = {
       if (account?.provider === "credentials") {
         return true; // 크리덴셜 로그인은 그냥 통과
       }
+
+      const email = profile?.email?.toLowerCase();
+      if (!email) return false;
+
+      await prisma.user.upsert({
+        where: { email },
+        create: {
+          email,
+          name: profile.name ?? null,
+          image: profile.picture ?? null,
+        },
+        update: {
+          image: profile.picture ?? null,
+        },
+      });
+
+
       if (account?.provider === "google" && profile?.email) {
         const email = String(profile.email).toLowerCase();
         await prisma.user.upsert({
@@ -106,6 +123,25 @@ export const authOptions = {
       return true;
     },
     async jwt({ token, account, profile }) {
+      if (!token?.sub) return token;
+
+      // ✅ JWT에 저장할 user정보 가져오기 (DB에서 최신값 조회)
+      const user = await prisma.user.findUnique({
+        where: { id: token.sub },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
+        },
+      });
+
+      if (user) {
+        token.name = user.name; // ✅ name 저장
+        token.email = user.email;
+        token.picture = user.image;
+      }
+
       if (account?.provider === "google" && profile?.email) {
         const email = String(profile.email).toLowerCase();
         const dbUser = await prisma.user.findUnique({
@@ -132,7 +168,12 @@ export const authOptions = {
       return token;
     },
     async session({ session, token }) {
-      if (token?.sub) session.user.id = token.sub;
+      if (token?.sub) {
+        session.user.id = token.sub;
+        session.user.name = token.name; // ✅ 세션에 반영
+        session.user.email = token.email;
+        session.user.image = token.picture;
+      }
       return session;
     },
   },
