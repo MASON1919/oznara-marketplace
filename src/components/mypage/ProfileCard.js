@@ -13,23 +13,31 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
+    DialogFooter,
 } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Share2, Copy, Facebook, MessageCircle } from "lucide-react";
+import { signOut } from 'next-auth/react';
 
 export default function ProfilePanel() {
     const { data: session, status } = useSession();
     const [tab, setTab] = useState("messages");
     const [shareOpen, setShareOpen] = useState(false);
     const [editOpen, setEditOpen] = useState(false);
+    const [passwordOpen, setPasswordOpen] = useState(false);
 
     // 닉네임/자기소개 상태 초기화
     const [nickname, setNickname] = useState("");
     const [bio, setBio] = useState("");
 
+    const [currentPassword, setCurrentPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [newConfirm, setNewConfirm] = useState("");
+    const [error, setError] = useState(null); // 에러 메시지 상태
+
     useEffect(() => {
         if (session?.user) {
-            setNickname(session.user.nickname || "");
+            setNickname(session.user.name || "");
             setBio(session.user.bio || "");
         }
     }, [session]);
@@ -51,6 +59,49 @@ export default function ProfilePanel() {
         setEditOpen(false);
     };
 
+    const handleChangePassword = async () => {
+        setError(null); // 에러 초기화
+
+        // 1차 클라이언트 검증 (Zod 스키마의 refine 로직 중 일부)
+        if (newPassword !== newConfirm) {
+            setError("새 비밀번호가 일치하지 않습니다.");
+            return;
+        }
+
+        try {
+            // 1. 비밀번호 변경 API 호출
+            const res = await fetch("/api/users/change-password", {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    currentPassword,
+                    newPassword,
+                    // 서버는 newConfirm을 필요로 하지 않을 수 있지만, 
+                    // Zod 스키마가 refine 로직에서 사용한다면 전송합니다.
+                    newConfirm
+                }),
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                // 2. API 호출 성공 시 응답 확인
+                alert(data.message || "비밀번호가 성공적으로 변경되었습니다. 다시 로그인해 주세요.");
+                setPasswordOpen(false);
+
+                // 3. 단순화된 로직: 서버 응답에 관계없이 성공하면 무조건 로그아웃 실행
+                await signOut({ callbackUrl: '/login' });
+
+            } else {
+                // 4. 서버 (Zod 검증 또는 DB 로직)에서 온 에러 메시지 표시
+                setError(data.message || data.error || "비밀번호 변경에 실패했습니다.");
+            }
+        } catch (err) {
+            console.error("비밀번호 변경 중 네트워크 오류:", err);
+            setError("네트워크 오류가 발생했습니다. 서버 상태를 확인해 주세요.");
+        }
+    };
+
     const shareLink = () => {
         navigator.clipboard.writeText(window.location.href);
         alert("URL이 복사되었습니다!");
@@ -59,7 +110,7 @@ export default function ProfilePanel() {
     return (
         <div className="flex flex-col w-full mt-3">
             <h1 className="flex w-full text-2xl font-bold mb-4">
-                안녕하세요, {session.user?.name || session.user?.email}님
+                안녕하세요, {session.user?.name || "OOO"}님
             </h1>
             {/* 프로필 카드 */}
             <div className="flex gap-4 h-[350px]">
@@ -76,7 +127,7 @@ export default function ProfilePanel() {
                                 )}
                             </Avatar>
                             <div className="flex flex-col p-1 ml-3">
-                                <h1 className="text-3xl font-black">{session.user?.name}</h1>
+                                <h1 className="text-3xl font-black">{session.user?.name || <span className="text-lg text-gray-400">닉네임을 입력해주세요</span>}</h1>
                                 <p className="mt-1 text-sm text-gray-600">{session.user?.email}</p>
                             </div>
                         </div>
@@ -111,6 +162,11 @@ export default function ProfilePanel() {
                             <Button className="flex-1 h-10" variant="outline" size="sm" onClick={() => setEditOpen(true)}>
                                 프로필 수정
                             </Button>
+
+                            <Button className="flex-1 h-10" variant="outline" size="sm" onClick={() => setPasswordOpen(true)}>
+                                비밀번호 변경
+                            </Button>
+
                             <Button className="flex-1 h-10" variant="outline" size="sm" onClick={() => setShareOpen(true)}>
                                 <Share2 className="w-4 h-4 mr-1" /> 공유
                             </Button>
@@ -167,6 +223,62 @@ export default function ProfilePanel() {
                         </div>
                     </DialogContent>
                 </Dialog>
+
+
+                {/* 💡 비밀번호 변경 모달 추가 */}
+                <Dialog open={passwordOpen} onOpenChange={setPasswordOpen}>
+                    <DialogContent className="sm:max-w-md sm:mx-auto">
+                        <DialogHeader>
+                            <DialogTitle>비밀번호 변경</DialogTitle>
+                        </DialogHeader>
+
+                        <div className="flex flex-col gap-4 mt-4">
+                            <Input
+                                type="password"
+                                placeholder="현재 비밀번호"
+                                value={currentPassword}
+                                onChange={(e) => setCurrentPassword(e.target.value)}
+                                required
+                                className="focus-visible:ring-0 focus-visible:border-input"
+                            />
+                            <Input
+                                type="password"
+                                placeholder="새 비밀번호 (8자 이상)"
+                                value={newPassword}
+                                onChange={(e) => setNewPassword(e.target.value)}
+                                required
+                                className="focus-visible:ring-0 focus-visible:border-input"
+                            />
+                            <Input
+                                type="password"
+                                placeholder="새 비밀번호 확인"
+                                value={newConfirm}
+                                onChange={(e) => setNewConfirm(e.target.value)}
+                                required
+                                className="focus-visible:ring-0 focus-visible:border-input"
+                            />
+
+                            {/* 에러 메시지 표시 */}
+                            {error && (
+                                <p className="text-sm text-red-500">{error}</p>
+                            )}
+
+                        </div>
+
+                        <DialogFooter className="mt-4">
+                            <Button
+                                onClick={handleChangePassword}
+                                disabled={!currentPassword || !newPassword || !newConfirm || newPassword.length < 8}
+                            >
+                                비밀번호 변경
+                            </Button>
+                        </DialogFooter>
+                        <p className="text-xs text-gray-500">
+                            비밀번호 변경 후에는 보안을 위해 모든 기기에서 로그아웃됩니다.
+                        </p>
+                    </DialogContent>
+                </Dialog>
+
 
                 {/* 공유 모달 */}
                 <Dialog open={shareOpen} onOpenChange={setShareOpen}>
