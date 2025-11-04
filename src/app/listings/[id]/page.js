@@ -99,12 +99,11 @@ export default async function ListingPage({ params }) {
       </div>
     );
   }
-
+  {
+    /*
   return (
     <div className="mt-16 max-w-5xl mx-auto p-4 flex gap-16 items-start">
-      {/* ============================================
-          최근 본 상품 추적 컴포넌트 (UI 없음)
-          ============================================ */}
+      
       <RecentlyViewedTracker
         listing={listingInfo}
         imageUrl={s3Urls[0]} // 첫 번째 이미지 (커버 이미지)
@@ -116,5 +115,6 @@ export default async function ListingPage({ params }) {
         initialLike={listingInfo.likes.length > 0}
       />
     </div>
-  );
+  );*/
+  }
 }
