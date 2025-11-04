@@ -3,6 +3,7 @@ import { Navbar } from "@/components/Navbar";
 import { Providers } from "./providers";
 import Footer from "@/components/Footer";
 import RecentlyViewed from "../components/RecentlyViewed";
+import { KakaoMapsScriptProvider } from "@/context/KakaoMapsScriptProvider";
 import { Toaster } from "@/components/ui/sonner";
 
 export const metadata = {
@@ -14,15 +15,17 @@ export default function RootLayout({ children }) {
   return (
     <html lang="ko">
       <body>
-        <Providers>
+        <KakaoMapsScriptProvider>
+          <Providers>
           <Toaster richColors position="top-center" />
-          <header>
-            <Navbar />
-          </header>
-          <main>{children}</main>
-          <RecentlyViewed />
-          <Footer />
-        </Providers>
+            <header>
+              <Navbar />
+            </header>
+            <main>{children}</main>
+            <RecentlyViewed />
+            <Footer />
+          </Providers>
+        </KakaoMapsScriptProvider>
       </body>
     </html>
   );
