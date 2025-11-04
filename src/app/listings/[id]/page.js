@@ -9,11 +9,12 @@ import PurchaseForm from "@/components/ListingPage/PurchaseForm";
 
 import ListingDescription from "@/components/ListingPage/ListingDescription";
 import ChatButton from "@/components/ChatButton"; // 새로 추가된 채팅 버튼 컴포넌트
+import EditButton from "@/components/ListingPage/EditButton"; // 게시글 수정 버튼 컴포넌트
+import DeleteButton from "@/components/ListingPage/DeleteButton"; // 게시글 삭제 버튼 컴포넌트
 
 // 상품 상세 페이지 컴포넌트입니다. 서버 컴포넌트로 동작합니다.
 
 import RecentlyViewedTracker from "@/components/ListingPage/RecentlyViewedTracker"; // 추가
-
 
 export default async function ListingPage({ params }) {
   // URL 파라미터에서 상품 ID를 가져옵니다.
@@ -23,10 +24,8 @@ export default async function ListingPage({ params }) {
   // 로그인된 사용자의 ID를 가져오거나, 로그인되지 않았다면 null로 설정합니다.
   const userId = session?.user?.id ?? null;
 
-
   // Prisma를 사용하여 데이터베이스에서 상품 정보를 가져옵니다.
   // 상품 이미지와 사용자의 좋아요 여부도 함께 포함합니다.
-
 
   const listingInfo = await prisma.listing.findUnique({
     where: { id },
@@ -35,7 +34,8 @@ export default async function ListingPage({ params }) {
         select: { s3Key: true },
       },
       likes: userId
-        ? { // 사용자가 로그인되어 있다면 좋아요 여부를 확인합니다.
+        ? {
+            // 사용자가 로그인되어 있다면 좋아요 여부를 확인합니다.
             where: { userId: userId },
             select: { userId: true },
             take: 1,
@@ -43,7 +43,6 @@ export default async function ListingPage({ params }) {
         : false, // 로그인되어 있지 않다면 좋아요 정보를 가져오지 않습니다.
     },
   });
-
 
   // S3 키를 사용하여 이미지 URL을 생성합니다.
 
@@ -78,11 +77,25 @@ export default async function ListingPage({ params }) {
         </div>
         {/* 상품 설명 컴포넌트 */}
         <ListingDescription description={listingInfo.description} />
-        
+
         {/* 채팅 버튼 컴포넌트: 상품 설명 아래에 위치하며, 판매자 ID를 전달합니다. */}
         <div className="mt-8">
           <ChatButton sellerId={listingInfo.userId} />
         </div>
+
+        {/* 수정/삭제 버튼 영역: 판매자만 자신의 게시글을 수정하거나 삭제할 수 있습니다 */}
+        {userId && userId === listingInfo.userId && (
+          <div className="mt-4 flex gap-3">
+            {/* 게시글 수정 버튼 */}
+            <div className="flex-1">
+              <EditButton listingId={id} />
+            </div>
+            {/* 게시글 삭제 버튼 */}
+            <div className="flex-1">
+              <DeleteButton listingId={id} />
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -104,5 +117,4 @@ export default async function ListingPage({ params }) {
       />
     </div>
   );
-
 }
