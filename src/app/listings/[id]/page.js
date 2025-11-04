@@ -2,12 +2,12 @@ import { prisma } from "@/lib/prisma";
 import { getS3Url } from "@/lib/s3";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-
-// 컴포넌트들을 import 합니다.
 import ListingCarousel from "@/components/ListingPage/ListingCarousel";
 import PurchaseForm from "@/components/ListingPage/PurchaseForm";
 import ListingDescription from "@/components/ListingPage/ListingDescription";
 import ChatButton from "@/components/chat/ChatButton"; // 새로 추가된 채팅 버튼 컴포넌트
+import EditButton from "@/components/ListingPage/EditButton"; // 게시글 수정 버튼 컴포넌트
+import DeleteButton from "@/components/ListingPage/DeleteButton"; // 게시글 삭제 버튼 컴포넌트
 import RecentlyViewedTracker from "@/components/ListingPage/RecentlyViewedTracker"; // 추가
 
 export default async function ListingPage({ params }) {
@@ -76,15 +76,27 @@ export default async function ListingPage({ params }) {
         <div className="mt-8">
           <ChatButton sellerId={listingInfo.userId} />
         </div>
+
+        {/* 수정/삭제 버튼 영역: 판매자만 자신의 게시글을 수정하거나 삭제할 수 있습니다 */}
+        {userId && userId === listingInfo.userId && (
+          <div className="mt-4 flex gap-3">
+            {/* 게시글 수정 버튼 */}
+            <div className="flex-1">
+              <EditButton listingId={id} />
+            </div>
+            {/* 게시글 삭제 버튼 */}
+            <div className="flex-1">
+              <DeleteButton listingId={id} />
+            </div>
+          </div>
+        )}
       </div>
     );
   }
 
-  return (
+  [/*return (
     <div className="mt-16 max-w-5xl mx-auto p-4 flex gap-16 items-start">
-      {/* ============================================
-          최근 본 상품 추적 컴포넌트 (UI 없음)
-          ============================================ */}
+    
       <RecentlyViewedTracker
         listing={listingInfo}
         imageUrl={s3Urls[0]} // 첫 번째 이미지 (커버 이미지)
@@ -98,3 +110,4 @@ export default async function ListingPage({ params }) {
     </div>
   );
 }
+*/]}
