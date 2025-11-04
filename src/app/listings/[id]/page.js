@@ -35,6 +35,10 @@ export default async function ListingPage({ params }) {
             take: 1,
           }
         : false, // 로그인되어 있지 않다면 좋아요 정보를 가져오지 않습니다.
+      transaction: {
+        orderBy: { createdAt: "desc" },
+        take: 1,
+      },
     },
   });
 
@@ -53,61 +57,67 @@ export default async function ListingPage({ params }) {
     listingInfo.likes = [];
   }
 
+  // 거래 정보에 따라 상태 계산
+  let status = "OnSale"; // 기본: 판매중
+  const latestTransaction = listingInfo.transaction?.[0];
+
+  if (latestTransaction) {
+    if (latestTransaction.status === "Pending") {
+      status = "Reserved"; // 예약중
+    } else if (latestTransaction.status === "Completed") {
+      status = "SoldOut"; // 판매완료
+    }
+  }
+
   // 상품 정보가 없을 경우 에러 메시지를 표시합니다.
   if (!listingInfo) {
     return <div>상품 정보를 찾을 수 없습니다</div>;
-  } else {
-    // 상품 정보가 있을 경우 상세 페이지 UI를 렌더링합니다.
-    return (
-      <div className="mt-16 max-w-5xl mx-auto p-4">
-        <div className="flex gap-16 items-start">
-          {/* 상품 이미지 캐러셀 컴포넌트 */}
-          <ListingCarousel listingInfo={listingInfo} s3Urls={s3Urls} />
-          {/* 구매 관련 폼 컴포넌트 */}
-          <PurchaseForm
-            listingInfo={listingInfo}
-            initialLike={listingInfo.likes.length > 0}
-          />
-        </div>
-        {/* 상품 설명 컴포넌트 */}
-        <ListingDescription description={listingInfo.description} />
-
-        {/* 채팅 버튼 컴포넌트: 상품 설명 아래에 위치하며, 판매자 ID를 전달합니다. */}
-        <div className="mt-8">
-          <ChatButton sellerId={listingInfo.userId} />
-        </div>
-
-        {/* 수정/삭제 버튼 영역: 판매자만 자신의 게시글을 수정하거나 삭제할 수 있습니다 */}
-        {userId && userId === listingInfo.userId && (
-          <div className="mt-4 flex gap-3">
-            {/* 게시글 수정 버튼 */}
-            <div className="flex-1">
-              <EditButton listingId={id} />
-            </div>
-            {/* 게시글 삭제 버튼 */}
-            <div className="flex-1">
-              <DeleteButton listingId={id} />
-            </div>
-          </div>
-        )}
-      </div>
-    );
   }
 
-  [/*return (
-    <div className="mt-16 max-w-5xl mx-auto p-4 flex gap-16 items-start">
-    
+  // 상품 정보가 있을 경우 상세 페이지 UI를 렌더링합니다.
+  return (
+    <div className="mt-16 max-w-5xl mx-auto p-4">
+      {/* 최근 본 상품 추적 컴포넌트 (UI 없음) */}
       <RecentlyViewedTracker
         listing={listingInfo}
         imageUrl={s3Urls[0]} // 첫 번째 이미지 (커버 이미지)
       />
 
-      <ListingCarousel listingInfo={listingInfo} s3Urls={s3Urls} />
-      <PurchaseForm
-        listingInfo={listingInfo}
-        initialLike={listingInfo.likes.length > 0}
-      />
+      <div className="flex gap-16 items-start">
+        {/* 상품 이미지 캐러셀 컴포넌트 */}
+        <ListingCarousel listingInfo={listingInfo} s3Urls={s3Urls} />
+        {/* 구매 관련 폼 컴포넌트 */}
+        <PurchaseForm
+          listingInfo={listingInfo}
+          initialLike={listingInfo.likes.length > 0}
+          status={status}
+          hasTransaction={
+            !!latestTransaction && latestTransaction.status !== "Canceled"
+          }
+          isSeller={userId === listingInfo.userId}
+        />
+      </div>
+      {/* 상품 설명 컴포넌트 */}
+      <ListingDescription description={listingInfo.description} />
+
+      {/* 채팅 버튼 컴포넌트: 상품 설명 아래에 위치하며, 판매자 ID를 전달합니다. */}
+      <div className="mt-8">
+        <ChatButton sellerId={listingInfo.userId} />
+      </div>
+
+      {/* 수정/삭제 버튼 영역: 판매자만 자신의 게시글을 수정하거나 삭제할 수 있습니다 */}
+      {userId && userId === listingInfo.userId && (
+        <div className="mt-4 flex gap-3">
+          {/* 게시글 수정 버튼 */}
+          <div className="flex-1">
+            <EditButton listingId={id} />
+          </div>
+          {/* 게시글 삭제 버튼 */}
+          <div className="flex-1">
+            <DeleteButton listingId={id} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-*/]}

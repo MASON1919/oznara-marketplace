@@ -22,8 +22,16 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Heart, MapPin, Truck } from "lucide-react";
 import { useLikeStore } from "../../store/useLikeStore";
+import PurchaseRequestButton from "./PurchaseRequestButton";
+import ChatButton from "../ChatButton";
 
-export default function PurchaseForm({ listingInfo, initialLike }) {
+export default function PurchaseForm({
+  listingInfo,
+  initialLike,
+  status,
+  hasTransaction,
+  isSeller,
+}) {
   // ============================================
   // Zustand store에서 상태와 액션 가져오기
   // ============================================
@@ -56,14 +64,6 @@ export default function PurchaseForm({ listingInfo, initialLike }) {
   // ============================================
   const handleFavorite = async () => {
     await toggleFavorite(listingInfo.id);
-  };
-
-  // ============================================
-  // 구매하기 핸들러
-  // ============================================
-  const handleBuy = () => {
-    // 구매 로직 구현
-    console.log("구매하기 클릭");
   };
 
   return (
@@ -204,13 +204,23 @@ export default function PurchaseForm({ listingInfo, initialLike }) {
         >
           <Heart className={cn("h-5 w-5", isLiked && "fill-current")} />
         </Button>
-        <Button
-          type="button"
-          className="flex-1 h-12 text-base"
-          onClick={handleBuy}
-        >
-          구매하기
-        </Button>
+        {/* ============================================
+            구매 요청 버튼과 채팅 버튼: 판매자가 아닌 경우에만 표시
+            ============================================ */}
+        {!isSeller && (
+          <div className="flex-1 flex gap-3">
+            <div className="flex-1">
+              <PurchaseRequestButton
+                listingId={listingInfo.id}
+                status={status}
+                hasTransaction={hasTransaction}
+              />
+            </div>
+            <div className="flex-1">
+              <ChatButton sellerId={listingInfo.userId} />
+            </div>
+          </div>
+        )}
       </CardFooter>
     </Card>
   );

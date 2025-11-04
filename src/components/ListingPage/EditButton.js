@@ -19,9 +19,9 @@ export default function EditButton({ listingId }) {
   return (
     <button
       onClick={handleEdit}
-      className="inline-flex items-center justify-center gap-2 w-full rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 text-white hover:bg-blue-700 h-10 px-4 py-2 shadow-sm hover:shadow"
+      className="inline-flex items-center justify-center gap-2 w-full rounded-lg text-base font-semibold ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 text-white hover:bg-blue-700 h-12 px-6 py-3 shadow-md hover:shadow-lg"
     >
-      <Edit className="w-4 h-4" />
+      <Edit className="w-5 h-5" />
       게시글 수정
     </button>
   );
