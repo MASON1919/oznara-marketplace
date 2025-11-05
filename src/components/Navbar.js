@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useChat } from "@/components/chat/ChatContext";
 import { Badge } from "@/components/ui/badge";
+import { clearAllRecentlyViewed } from "@/lib/recentlyViewed";
 
 import {
   NavigationMenu,
@@ -30,12 +31,20 @@ export function Navbar() {
   const { unreadChatsCount } = useChat();
   const router = useRouter();
   const [query, setQuery] = useState("");
+
   const onSubmit = (e) => {
     e.preventDefault();
     const q = query.trim();
     if (!q) return;
     router.push(`/search?query=${encodeURIComponent(q)}&page=1`);
   };
+
+  // 로그아웃 핸들러
+  const handleLogout = () => {
+    clearAllRecentlyViewed(); // 최근 본 상품 초기화
+    signOut({ callbackUrl: "/" }); // 홈으로 리디렉션
+  };
+
   return (
     <div className="flex w-full justify-between bg-white p-4 shadow relative">
       <div>
@@ -175,10 +184,7 @@ export function Navbar() {
               )}
             </Link>
             <span className="text-gray-300">|</span>
-            <button
-              className="cursor-pointer"
-              onClick={() => signOut({ callbackUrl: "/" })}
-            >
+            <button className="cursor-pointer" onClick={handleLogout}>
               Logout
             </button>
           </div>

@@ -8,8 +8,8 @@ import { useRouter } from "next/navigation"; // 페이지 라우팅을 위해 �
 import { Button } from "@/components/ui/button"; // shadcn/ui의 Button 컴포넌트를 가져옵니다.
 import { MessageCircle } from "lucide-react"; // lucide-react 아이콘 라이브러리에서 MessageCircle 아이콘을 가져옵니다.
 
-// ChatButton 컴포넌트는 판매자 ID를 props로 받습니다.
-export default function ChatButton({ sellerId }) {
+// ChatButton 컴포넌트는 판매자 ID와 상품 ID를 props로 받습니다.
+export default function ChatButton({ sellerId, listingId }) {
   // useSession 훅을 사용하여 현재 사용자의 세션 정보와 인증 상태를 가져옵니다.
   const { data: session, status } = useSession();
   const router = useRouter(); // useRouter 훅을 사용하여 라우터 객체를 가져옵니다.
@@ -17,12 +17,6 @@ export default function ChatButton({ sellerId }) {
 
   // 세션 로딩 중일 때는 버튼을 렌더링하지 않아 깜빡임 현상을 방지합니다.
   if (status === "loading") {
-    return null;
-  }
-
-  // 로그인된 상태에서 현재 사용자가 판매자 본인일 경우 버튼을 숨깁니다.
-  // 판매자는 자신의 상품에 대해 채팅을 시작할 필요가 없기 때문입니다.
-  if (status === "authenticated" && session.user.id === sellerId) {
     return null;
   }
 
@@ -43,7 +37,7 @@ export default function ChatButton({ sellerId }) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ sellerId }), // 판매자 ID를 요청 본문에 담아 보냅니다.
+        body: JSON.stringify({ sellerId, listingId }), // 판매자 ID와 상품 ID를 요청 본문에 담아 보냅니다.
       });
 
       // API 응답이 성공적이지 않으면 에러를 발생시킵니다.
@@ -56,7 +50,7 @@ export default function ChatButton({ sellerId }) {
       const { chatRoomId } = await response.json();
 
       // 채팅방 ID를 받아오면 해당 채팅 페이지로 이동합니다.
-      router.push(`/chat/${chatRoomId}`);
+      router.push(`/chatroom/${chatRoomId}`);
     } catch (error) {
       console.error(error); // 콘솔에 에러를 기록합니다.
       alert(`오류: ${error.message}`); // 사용자에게 에러 메시지를 알립니다.

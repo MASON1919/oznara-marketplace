@@ -12,6 +12,18 @@ export async function POST(req) {
   const { listingId, like } = await req.json();
   const userId = session.user.id;
 
+  const listing = await prisma.listing.findUnique({
+    where: { id: listingId },
+    select: { userId: true }, // 판매자 ID만 가져오기
+  });
+
+  if (userId === listing.userId) {
+    return NextResponse.json(
+      { error: "본인 상품에는 좋아요를 할 수 없습니다." },
+      { status: 400 }
+    );
+  }
+
   if (like) {
     try {
       await prisma.$transaction(async (tx) => {

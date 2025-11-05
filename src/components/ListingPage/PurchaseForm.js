@@ -63,6 +63,10 @@ export default function PurchaseForm({
   // 좋아요 토글 핸들러
   // ============================================
   const handleFavorite = async () => {
+    if (isSeller) {
+      alert("본인 상품에는 좋아요를 할 수 없습니다");
+      return;
+    }
     await toggleFavorite(listingInfo.id);
   };
 
@@ -192,6 +196,7 @@ export default function PurchaseForm({
             좋아요 버튼 (Zustand로 관리)
             ============================================ */}
         <Button
+          disabled={isSeller}
           type="button"
           variant="ghost"
           size="icon"
@@ -205,22 +210,24 @@ export default function PurchaseForm({
           <Heart className={cn("h-5 w-5", isLiked && "fill-current")} />
         </Button>
         {/* ============================================
-            구매 요청 버튼과 채팅 버튼: 판매자가 아닌 경우에만 표시
+            구매 요청/상태 버튼과 채팅 버튼
             ============================================ */}
-        {!isSeller && (
-          <div className="flex-1 flex gap-3">
-            <div className="flex-1">
-              <PurchaseRequestButton
-                listingId={listingInfo.id}
-                status={status}
-                hasTransaction={hasTransaction}
-              />
-            </div>
-            <div className="flex-1">
-              <ChatButton sellerId={listingInfo.userId} />
-            </div>
+        <div className="flex-1 flex gap-3">
+          <div className="flex-1">
+            <PurchaseRequestButton
+              listingId={listingInfo.id}
+              status={status}
+              hasTransaction={hasTransaction}
+              isSeller={isSeller}
+            />
           </div>
-        )}
+          <div className="flex-1">
+            <ChatButton
+              sellerId={listingInfo.userId}
+              listingId={listingInfo.id}
+            />
+          </div>
+        </div>
       </CardFooter>
     </Card>
   );
