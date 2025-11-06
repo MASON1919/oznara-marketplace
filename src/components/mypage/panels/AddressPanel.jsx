@@ -201,57 +201,59 @@ export default function AddressPanel({ onClose }) {
                     )}
 
                     {/* 추가 페이지 */}
-                    {currentPage === "add" && (
-                        <div className="flex flex-col mt-4 h-full space-y-3">
-                            <Input
-                                placeholder="배송지명 (최대 10글자)"
-                                maxLength={10}
-                                value={form.label}
-                                className="h-12 focus-visible:ring-0 focus-visible:border-input"
-                                onChange={e => handleFormChange("label", e.target.value)}
-                            />
-                            <Input
-                                placeholder="이름"
-                                maxLength={10}
-                                value={form.name}
-                                className="h-12 focus-visible:ring-0 focus-visible:border-input"
-                                onChange={e => handleFormChange("name", e.target.value)}
-                            />
-                            <Input
-                                placeholder="전화번호 (-없이 숫자만 입력)"
-                                inputMode="numeric"
-                                maxLength={11}
-                                value={form.phone}
-                                className="h-12 focus-visible:ring-0 focus-visible:border-input"
-                                onChange={e => handleFormChange("phone", e.target.value.replace(/[^0-9]/g, ""))}
-                            />
-                            <Input
-                                placeholder="주소검색"
-                                value={form.address}
-                                className="h-12 focus-visible:ring-0 focus-visible:border-input"
-                                onChange={e => handleFormChange("address", e.target.value)}
-                            />
-                            <Input
-                                placeholder="상세주소 (예: 101동 101호)"
-                                value={form.detail}
-                                className="h-12 focus-visible:ring-0 focus-visible:border-input"
-                                onChange={e => handleFormChange("detail", e.target.value)}
-                            />
-                            <div className="flex items-center space-x-2">
-                                <Checkbox
-                                    checked={form.isDefault}
-                                    onCheckedChange={checked => handleFormChange("isDefault", checked)}
-                                    className="w-4.5 h-4.5 bg-neutral-100 rounded-full"
+                    <div className="h-full">
+                        {currentPage === "add" && (
+                            <div className="flex flex-col h-full space-y-3">
+                                <Input
+                                    placeholder="배송지명 (최대 10글자)"
+                                    maxLength={10}
+                                    value={form.label}
+                                    className="h-12 focus-visible:ring-0 focus-visible:border-input"
+                                    onChange={e => handleFormChange("label", e.target.value)}
                                 />
-                                <span className="text-sm">대표 배송지로 설정</span>
+                                <Input
+                                    placeholder="이름"
+                                    maxLength={10}
+                                    value={form.name}
+                                    className="h-12 focus-visible:ring-0 focus-visible:border-input"
+                                    onChange={e => handleFormChange("name", e.target.value)}
+                                />
+                                <Input
+                                    placeholder="전화번호 (-없이 숫자만 입력)"
+                                    inputMode="numeric"
+                                    maxLength={11}
+                                    value={form.phone}
+                                    className="h-12 focus-visible:ring-0 focus-visible:border-input"
+                                    onChange={e => handleFormChange("phone", e.target.value.replace(/[^0-9]/g, ""))}
+                                />
+                                <Input
+                                    placeholder="주소검색"
+                                    value={form.address}
+                                    className="h-12 focus-visible:ring-0 focus-visible:border-input"
+                                    onChange={e => handleFormChange("address", e.target.value)}
+                                />
+                                <Input
+                                    placeholder="상세주소 (예: 101동 101호)"
+                                    value={form.detail}
+                                    className="h-12 focus-visible:ring-0 focus-visible:border-input"
+                                    onChange={e => handleFormChange("detail", e.target.value)}
+                                />
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                        checked={form.isDefault}
+                                        onCheckedChange={checked => handleFormChange("isDefault", checked)}
+                                        className="w-4.5 h-4.5 bg-neutral-100 rounded-full"
+                                    />
+                                    <span className="text-sm">대표 배송지로 설정</span>
+                                </div>
+                                <div className="flex pb-2 space-x-2 mt-auto">
+                                    <Button className="h-12 text-md w-full" onClick={handleAdd}>
+                                        완료
+                                    </Button>
+                                </div>
                             </div>
-                            <div className="flex space-x-2 mt-auto">
-                                <Button className="h-12 text-md w-full" onClick={handleAdd}>
-                                    완료
-                                </Button>
-                            </div>
-                        </div>
-                    )}
+                        )}
+                    </div>
 
                     {/* 편집 페이지 */}
                     {currentPage === "edit" && editing && (

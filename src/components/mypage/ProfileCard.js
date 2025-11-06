@@ -234,9 +234,16 @@ export default function ProfilePanel() {
                                 프로필 수정
                             </Button>
 
-                            <Button className="flex-1 h-10" variant="outline" size="sm" onClick={() => setPasswordOpen(true)}>
-                                비밀번호 변경
-                            </Button>
+                            {session.user.hasPassword && (
+                                <Button
+                                    className="flex-1 h-10"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setPasswordOpen(true)}
+                                >
+                                    비밀번호 변경
+                                </Button>
+                            )}
 
                             <Button className="flex-1 h-10" variant="outline" size="sm" onClick={() => setShareOpen(true)}>
                                 <Share2 className="w-4 h-4 mr-1" /> 공유
