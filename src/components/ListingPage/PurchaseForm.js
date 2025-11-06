@@ -1,6 +1,7 @@
 "use client";
 import { useEffect } from "react";
-import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
+import { cn, formatTimeAgo } from "@/lib/utils";
 import {
   Card,
   CardContent,
@@ -32,6 +33,7 @@ export default function PurchaseForm({
   hasTransaction,
   isSeller,
 }) {
+  const router = useRouter();
   // ============================================
   // Zustand store에서 상태와 액션 가져오기
   // ============================================
@@ -76,11 +78,18 @@ export default function PurchaseForm({
         <CardTitle className="text-2xl leading-tight">
           {listingInfo.title}
         </CardTitle>
-        <div className="text-3xl font-extrabold tracking-tight">
-          {listingInfo.price.toLocaleString()}원
-        </div>
-        <CardDescription className="text-sm text-muted-foreground">
-          <span>3분 전</span>
+                    <div className="text-3xl font-extrabold tracking-tight flex items-center gap-2"> {/* Added flex and items-center for alignment */}
+                      {listingInfo.price.toLocaleString()}원
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => router.push(`/search-price?query=${encodeURIComponent(listingInfo.title)}`)} // Changed navigation target
+                        className="text-xs h-6 px-2 py-0.5" // Smaller button
+                      >
+                        시세 조회
+                      </Button>
+                    </div>        <CardDescription className="text-sm text-muted-foreground">
+          <span>{formatTimeAgo(listingInfo.createdAt)}</span>
           <span className="mx-2">·</span>
           <span>조회 {listingInfo.viewCount}</span>
           <span className="mx-2">·</span>
@@ -195,32 +204,36 @@ export default function PurchaseForm({
         {/* ============================================
             좋아요 버튼 (Zustand로 관리)
             ============================================ */}
-        <Button
-          disabled={isSeller}
-          type="button"
-          variant="ghost"
-          size="icon"
-          aria-label="찜"
-          onClick={handleFavorite}
-          className={cn(
-            "rounded-full border",
-            isLiked && "text-red-500 border-red-300"
-          )}
-        >
-          <Heart className={cn("h-5 w-5", isLiked && "fill-current")} />
-        </Button>
+        {!isSeller && (
+          <Button
+            disabled={isSeller}
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label="찜"
+            onClick={handleFavorite}
+            className={cn(
+              "rounded-full border",
+              isLiked && "text-red-500 border-red-300"
+            )}
+          >
+            <Heart className={cn("h-5 w-5", isLiked && "fill-current")} />
+          </Button>
+        )}
         {/* ============================================
             구매 요청/상태 버튼과 채팅 버튼
             ============================================ */}
         <div className="flex-1 flex gap-3">
-          <div className="flex-1">
-            <PurchaseRequestButton
-              listingId={listingInfo.id}
-              status={status}
-              hasTransaction={hasTransaction}
-              isSeller={isSeller}
-            />
-          </div>
+          {!isSeller && (
+            <div className="flex-1">
+              <PurchaseRequestButton
+                listingId={listingInfo.id}
+                status={status}
+                hasTransaction={hasTransaction}
+                isSeller={isSeller}
+              />
+            </div>
+          )}
           <div className="flex-1">
             <ChatButton
               sellerId={listingInfo.userId}

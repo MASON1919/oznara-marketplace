@@ -65,7 +65,12 @@ export const useChat = (chatRoomId, initialOtherUser) => {
     if (!chatRoomId) return;
 
     // Firestore에서 'chatrooms' 컬렉션 안의 특정 chatRoomId 문서 내부에 있는 'messages' 서브컬렉션을 참조합니다.
-    const messagesCollection = collection(db, "chatrooms", chatRoomId, "messages");
+    const messagesCollection = collection(
+      db,
+      "chatrooms",
+      chatRoomId,
+      "messages"
+    );
     // 메시지를 'timestamp'(타임스탬프) 필드를 기준으로 오름차순(시간순)으로 정렬하는 쿼리를 생성합니다.
     const q = query(messagesCollection, orderBy("timestamp", "asc"));
 
@@ -127,7 +132,12 @@ export const useChat = (chatRoomId, initialOtherUser) => {
       if (newMessage.trim() === "" || !chatRoomId || !session?.user?.id) return;
 
       // 메시지를 추가할 Firestore 컬렉션의 참조를 가져옵니다.
-      const messagesCollection = collection(db, "chatrooms", chatRoomId, "messages");
+      const messagesCollection = collection(
+        db,
+        "chatrooms",
+        chatRoomId,
+        "messages"
+      );
       // 새 메시지 문서를 추가합니다.
       await addDoc(messagesCollection, {
         type: "text", // 메시지 타입
@@ -184,7 +194,12 @@ export const useChat = (chatRoomId, initialOtherUser) => {
         // [3단계: Firestore에 메시지 저장]
         // 업로드가 성공하면, 이미지의 전체 URL 대신 S3 객체 'key'를 Firestore에 저장합니다.
         // 이는 URL 구조가 변경될 경우에 유연하게 대처할 수 있게 해줍니다.
-        const messagesCollection = collection(db, "chatrooms", chatRoomId, "messages");
+        const messagesCollection = collection(
+          db,
+          "chatrooms",
+          chatRoomId,
+          "messages"
+        );
         await addDoc(messagesCollection, {
           type: "image",
           imageKey: key, // S3 객체 키 저장
@@ -237,7 +252,12 @@ export const useChat = (chatRoomId, initialOtherUser) => {
       if (!chatRoomId || !session?.user?.id || !location) return;
 
       // 메시지를 추가할 Firestore 컬렉션의 참조를 가져옵니다.
-      const messagesCollection = collection(db, "chatrooms", chatRoomId, "messages");
+      const messagesCollection = collection(
+        db,
+        "chatrooms",
+        chatRoomId,
+        "messages"
+      );
       // 새 위치 메시지 문서를 추가합니다.
       await addDoc(messagesCollection, {
         type: "location", // 메시지 타입

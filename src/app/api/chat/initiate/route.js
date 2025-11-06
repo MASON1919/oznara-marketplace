@@ -73,7 +73,7 @@ export async function POST(request) {
 
     if (!transaction) {
       return NextResponse.json(
-        { error: "아직 구매 요청이 없습니다." },
+        { error: "아직 채팅 요청이 없습니다." },
         { status: 400 }
       );
     }
