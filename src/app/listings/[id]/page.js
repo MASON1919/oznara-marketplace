@@ -110,10 +110,7 @@ export default async function ListingPage({ params }) {
       {/* 상품 설명 컴포넌트 */}
       <ListingDescription description={listingInfo.description} />
 
-      {/* 채팅 버튼 컴포넌트: 상품 설명 아래에 위치하며, 판매자 ID를 전달합니다. */}
-      <div className="mt-8">
-        <ChatButton sellerId={listingInfo.userId} />
-      </div>
+
 
       {/* 수정/삭제 버튼 영역: 판매자만 자신의 게시글을 수정하거나 삭제할 수 있습니다 */}
       {userId && userId === listingInfo.userId && (

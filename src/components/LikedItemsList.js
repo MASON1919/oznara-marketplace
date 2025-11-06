@@ -6,7 +6,7 @@ import { Heart } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useLikeStore } from "../store/useLikeStore";
 
-export default function LikedItemsList({ likes, s3Urls }) {
+export default function LikedItemsList({ likes, s3Urls, className = "" }) {
   // ============================================
   // Zustand store 사용
   // ============================================
@@ -71,7 +71,7 @@ export default function LikedItemsList({ likes, s3Urls }) {
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 p-4">
+    <div className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 p-4 ${className}`}>
       {visibleLikes.map((item, index) => {
         const originalIndex = likes.findIndex(
           (like) => like.listing.id === item.listing.id

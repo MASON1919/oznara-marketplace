@@ -59,7 +59,8 @@ export default function ChatButton({ sellerId, listingId, status, isBuyer }) {
       // API 응답이 성공적이지 않으면 에러를 발생시킵니다.
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to start chat");
+        alert(`오류: ${errorData.error || "Failed to start chat"}`);
+        return; // Stop further execution in this try block
       }
 
       // API 응답에서 chatRoomId를 추출합니다.
