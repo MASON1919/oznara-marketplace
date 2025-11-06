@@ -31,6 +31,7 @@ export default function PurchaseForm({
   status,
   hasTransaction,
   isSeller,
+  isBuyer, // 현재 사용자가 구매자인지 여부
 }) {
   // ============================================
   // Zustand store에서 상태와 액션 가져오기
@@ -219,12 +220,15 @@ export default function PurchaseForm({
               status={status}
               hasTransaction={hasTransaction}
               isSeller={isSeller}
+              isBuyer={isBuyer}
             />
           </div>
           <div className="flex-1">
             <ChatButton
               sellerId={listingInfo.userId}
               listingId={listingInfo.id}
+              status={status}
+              isBuyer={isBuyer}
             />
           </div>
         </div>

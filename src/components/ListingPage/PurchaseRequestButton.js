@@ -13,13 +13,14 @@ export default function PurchaseRequestButton({
   listingId,
   status,
   hasTransaction,
+  isBuyer, // 현재 사용자가 구매자인지 여부
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   const handlePurchaseRequest = async () => {
-    // 예약 취소
-    if (status === "Reserved") {
+    // 예약 취소 (구매자만 가능)
+    if (status === "Reserved" && isBuyer) {
       if (!confirm("예약을 취소하시겠습니까?")) {
         return;
       }
@@ -80,9 +81,17 @@ export default function PurchaseRequestButton({
       };
     }
     if (status === "Reserved") {
+      // 구매자인 경우에만 예약 취소 가능
+      if (isBuyer) {
+        return {
+          text: "예약 취소",
+          disabled: false,
+        };
+      }
+      // 다른 사용자는 예약중 상태만 표시
       return {
-        text: "예약 취소",
-        disabled: false,
+        text: "예약중",
+        disabled: true,
       };
     }
     return {
