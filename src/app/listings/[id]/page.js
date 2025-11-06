@@ -2,18 +2,12 @@ import { prisma } from "@/lib/prisma";
 import { getS3Url } from "@/lib/s3";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-
-// 컴포넌트들을 import 합니다.
 import ListingCarousel from "@/components/ListingPage/ListingCarousel";
 import PurchaseForm from "@/components/ListingPage/PurchaseForm";
-
 import ListingDescription from "@/components/ListingPage/ListingDescription";
-import ChatButton from "@/components/ChatButton"; // 새로 추가된 채팅 버튼 컴포넌트
+import ChatButton from "@/components/chat/ChatButton"; // 새로 추가된 채팅 버튼 컴포넌트
 import EditButton from "@/components/ListingPage/EditButton"; // 게시글 수정 버튼 컴포넌트
 import DeleteButton from "@/components/ListingPage/DeleteButton"; // 게시글 삭제 버튼 컴포넌트
-
-// 상품 상세 페이지 컴포넌트입니다. 서버 컴포넌트로 동작합니다.
-
 import RecentlyViewedTracker from "@/components/ListingPage/RecentlyViewedTracker"; // 추가
 
 export default async function ListingPage({ params }) {
@@ -99,11 +93,9 @@ export default async function ListingPage({ params }) {
       </div>
     );
   }
-  {
-    /*
+
   return (
     <div className="mt-16 max-w-5xl mx-auto p-4 flex gap-16 items-start">
-      
       <RecentlyViewedTracker
         listing={listingInfo}
         imageUrl={s3Urls[0]} // 첫 번째 이미지 (커버 이미지)
@@ -115,6 +107,5 @@ export default async function ListingPage({ params }) {
         initialLike={listingInfo.likes.length > 0}
       />
     </div>
-  );*/
-  }
+  );
 }

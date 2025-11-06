@@ -52,11 +52,15 @@ export default function ChatButton({ sellerId }) {
         throw new Error(errorData.error || 'Failed to start chat');
       }
 
-      // API 응답에서 chatRoomId를 추출합니다.
-      const { chatRoomId } = await response.json();
+      // API 응답에서 chatRoomId와 otherUser를 추출합니다.
+      const { chatRoomId, otherUser } = await response.json();
       
-      // 채팅방 ID를 받아오면 해당 채팅 페이지로 이동합니다.
-      router.push(`/chat/${chatRoomId}`);
+      // 채팅방 ID와 otherUser 데이터를 받아오면 해당 채팅 페이지로 이동합니다.
+      // otherUser 객체를 JSON 문자열로 변환하여 쿼리 파라미터로 전달합니다.
+      router.push({
+        pathname: `/chatroom/${chatRoomId}`,
+        query: { otherUser: JSON.stringify(otherUser) },
+      });
 
     } catch (error) {
       console.error(error); // 콘솔에 에러를 기록합니다.
