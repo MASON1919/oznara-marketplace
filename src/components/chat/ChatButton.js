@@ -1,84 +1,102 @@
-
-// 이 컴포넌트는 클라이언트 측에서 렌더링됩니다.
+// 이 코드는 웹 브라우저(클라이언트)에서 실행됩니다.
 'use client';
 
-// React 훅과 Next.js 관련 훅, shadcn/ui 버튼 컴포넌트를 import 합니다.
+// React에서 필요한 기능들을 가져옵니다.
+// `useState`: 화면에서 변하는 값(상태)을 관리하는 기능
 import { useState } from 'react';
-import { useSession } from 'next-auth/react'; // NextAuth 세션 정보를 가져오기 위해 사용합니다.
-import { useRouter } from 'next/navigation'; // 페이지 라우팅을 위해 사용합니다.
-import { Button } from '@/components/ui/button'; // shadcn/ui의 Button 컴포넌트를 가져옵니다.
 
-// ChatButton 컴포넌트는 판매자 ID를 props로 받습니다.
+// `next-auth`에서 로그인 정보를 가져오는 기능 (`useSession`)
+import { useSession } from 'next-auth/react';
+
+// `next/navigation`에서 페이지 이동을 도와주는 기능 (`useRouter`)
+import { useRouter } from 'next/navigation';
+
+// 미리 만들어둔 예쁜 버튼 (`Button`) 부품을 가져옵니다.
+import { Button } from '@/components/ui/button';
+
+/**
+ * 이 버튼은 상품 상세 페이지 등에서 판매자와 채팅을 시작할 때 사용됩니다.
+ * 
+ * @param {object} props - 이 버튼에 전달되는 정보들
+ * @param {string} props.sellerId - 채팅을 걸고 싶은 판매자의 고유 ID
+ */
 export default function ChatButton({ sellerId }) {
-  // useSession 훅을 사용하여 현재 사용자의 세션 정보와 인증 상태를 가져옵니다.
+  // 1. 내 로그인 정보와 상태를 가져옵니다.
   const { data: session, status } = useSession();
-  const router = useRouter(); // useRouter 훅을 사용하여 라우터 객체를 가져옵니다.
-  const [isLoading, setIsLoading] = useState(false); // 버튼 로딩 상태를 관리합니다.
+  // 2. 페이지를 이동시킬 때 사용하는 도우미입니다.
+  const router = useRouter();
+  // 3. 버튼을 눌렀을 때, 채팅방을 만드는 중인지 아닌지 알려주는 변수입니다.
+  const [isLoading, setIsLoading] = useState(false);
 
-  // 세션 로딩 중일 때는 버튼을 렌더링하지 않아 깜빡임 현상을 방지합니다.
+  // 만약 내 로그인 정보를 아직 가져오는 중이라면, 버튼을 잠시 숨깁니다.
+  // (버튼이 갑자기 나타났다 사라지는 것을 막기 위함입니다.)
   if (status === 'loading') {
     return null;
   }
 
-  // 로그인된 상태에서 현재 사용자가 판매자 본인일 경우 버튼을 숨깁니다.
-  // 판매자는 자신의 상품에 대해 채팅을 시작할 필요가 없기 때문입니다.
+  // 만약 내가 로그인했고, 그게 바로 이 상품을 파는 판매자라면 버튼을 숨깁니다.
+  // (판매자는 자기 상품에 자기가 채팅을 걸 필요가 없으니까요.)
   if (status === 'authenticated' && session.user.id === sellerId) {
     return null;
   }
 
-  // '채팅하기' 버튼 클릭 시 실행될 비동기 함수입니다.
+  /**
+   * '채팅하기' 버튼을 눌렀을 때 실행되는 기능입니다.
+   * 이 기능은 채팅방을 새로 만들거나, 이미 있는 채팅방으로 나를 데려다줍니다.
+   */
   const handleChatInitiation = async () => {
-    // 로그인되지 않은 상태에서 버튼을 클릭하면 로그인 페이지로 리디렉션합니다.
+    // 1. 만약 내가 로그인하지 않았다면, 로그인 페이지로 보내버립니다.
     if (status !== 'authenticated') {
       router.push('/login');
       return;
     }
 
-    setIsLoading(true); // 로딩 상태를 true로 설정하여 버튼을 비활성화하고 텍스트를 변경합니다.
+    // 2. 채팅방을 만드는 중이라고 표시하고, 버튼을 누르지 못하게 합니다.
+    setIsLoading(true);
     try {
-      // /api/chat/initiate API 라우트로 POST 요청을 보냅니다.
-      // 이 API는 Firestore에서 채팅방을 찾거나 새로 생성합니다.
+      // 3. 우리 서버에 '채팅방 좀 만들어주세요!' 하고 요청을 보냅니다.
+      // (`/api/chat/initiate`라는 주소로 `sellerId` 정보를 함께 보냅니다.)
       const response = await fetch('/api/chat/initiate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ sellerId }), // 판매자 ID를 요청 본문에 담아 보냅니다.
+        body: JSON.stringify({ sellerId }),
       });
 
-      // API 응답이 성공적이지 않으면 에러를 발생시킵니다.
+      // 4. 만약 서버에서 문제가 생겼다고 알려주면, 에러 메시지를 보여줍니다.
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to start chat');
       }
 
-      // API 응답에서 chatRoomId와 otherUser를 추출합니다.
+      // 5. 서버에서 '채팅방 ID'와 '상대방 정보'를 받아옵니다.
       const { chatRoomId, otherUser } = await response.json();
       
-      // 채팅방 ID와 otherUser 데이터를 받아오면 해당 채팅 페이지로 이동합니다.
-      // otherUser 객체를 JSON 문자열로 변환하여 쿼리 파라미터로 전달합니다.
-      router.push({
-        pathname: `/chatroom/${chatRoomId}`,
-        query: { otherUser: JSON.stringify(otherUser) },
-      });
+      // 6. 받아온 정보들을 가지고 해당 채팅방 페이지로 이동합니다.
+      // 이때, 상대방 정보를 주소(URL)에 함께 담아서 보내주면,
+      // 채팅방 페이지에서 상대방 정보를 다시 가져올 필요 없이 바로 쓸 수 있어서 더 빠릅니다.
+      router.push(`/chatroom/${chatRoomId}?otherUser=${encodeURIComponent(JSON.stringify(otherUser))}`);
 
     } catch (error) {
-      console.error(error); // 콘솔에 에러를 기록합니다.
-      alert(`오류: ${error.message}`); // 사용자에게 에러 메시지를 알립니다.
+      // 7. 혹시라도 예상치 못한 문제가 생기면, 콘솔에 에러를 기록하고 사용자에게 알립니다.
+      console.error("채팅 시작 중 오류 발생:", error);
+      alert(`오류: ${error.message}`);
     } finally {
-      setIsLoading(false); // 로딩 상태를 false로 설정합니다.
+      // 8. 모든 작업이 끝나면, '채팅방 만드는 중' 표시를 없애고 버튼을 다시 누를 수 있게 합니다.
+      setIsLoading(false);
     }
   };
 
-  // 컴포넌트 렌더링 부분입니다.
+  // 화면에 보여줄 버튼입니다.
   return (
     <Button
-      onClick={handleChatInitiation} // 클릭 이벤트 핸들러를 연결합니다.
-      disabled={isLoading || status === 'loading'} // 로딩 중이거나 세션 로딩 중일 때 버튼을 비활성화합니다.
-      className="w-full mt-4" // Tailwind CSS 클래스를 적용합니다.
-      size="lg" // shadcn/ui 버튼의 크기를 설정합니다.
+      onClick={handleChatInitiation} // 버튼을 누르면 `handleChatInitiation` 기능이 실행됩니다.
+      disabled={isLoading || status === 'loading'} // 채팅방 만드는 중이거나 로그인 정보 가져오는 중이면 버튼을 누르지 못하게 합니다.
+      className="w-full mt-4" // 버튼의 크기와 위치를 조절하는 디자인 설정입니다.
+      size="lg" // 버튼을 크게 만듭니다.
     >
-      {isLoading ? '채팅방 여는 중...' : '채팅하기'} {/* 로딩 상태에 따라 버튼 텍스트를 변경합니다. */}
+      {isLoading ? '채팅방 여는 중...' : '채팅하기'} {/* 로딩 중이면 텍스트를 바꾸어 보여줍니다. */}
     </Button>
   );
 }

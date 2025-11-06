@@ -1,30 +1,34 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
 import { X } from "lucide-react";
 import { getRecentlyViewed, removeRecentlyViewed } from "../lib/recentlyViewed";
 
 export default function RecentlyViewed() {
+  const { data: session } = useSession();
   const [items, setItems] = useState([]);
 
   // ============================================
   // 최근 본 상품 불러오기
   // ============================================
   useEffect(() => {
+    const userId = session?.user?.id;
+
     // 초기 로드
-    setItems(getRecentlyViewed().slice(0, 3)); // 최대 3개만 표시
+    setItems(getRecentlyViewed(userId).slice(0, 3)); // 최대 3개만 표시
 
     // storage 변경 감지
     const handleStorageChange = () => {
-      setItems(getRecentlyViewed().slice(0, 3));
+      setItems(getRecentlyViewed(userId).slice(0, 3));
     };
 
     window.addEventListener("recentlyViewedChanged", handleStorageChange);
     return () => {
       window.removeEventListener("recentlyViewedChanged", handleStorageChange);
     };
-  }, []);
+  }, [session?.user?.id]); // userId가 변경되면 다시 로드
 
   // ============================================
   // 상품 제거 핸들러
@@ -32,7 +36,8 @@ export default function RecentlyViewed() {
   const handleRemove = (e, itemId) => {
     e.preventDefault();
     e.stopPropagation();
-    removeRecentlyViewed(itemId);
+    const userId = session?.user?.id;
+    removeRecentlyViewed(itemId, userId);
   };
 
   // 최근 본 상품이 없으면 표시 안 함

@@ -65,7 +65,7 @@ export default function DeleteButton({ listingId }) {
             <button
               onClick={() => setShowConfirm(false)}
               disabled={isDeleting}
-              className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50"
+              className="flex-1 px-4 py-2.5 text-sm font-semibold text-gray-700 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all disabled:opacity-50"
             >
               취소
             </button>
@@ -73,7 +73,7 @@ export default function DeleteButton({ listingId }) {
             <button
               onClick={handleDelete}
               disabled={isDeleting}
-              className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors disabled:opacity-50"
+              className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 transition-all disabled:opacity-50 shadow-md"
             >
               {isDeleting ? (
                 <>
@@ -97,9 +97,9 @@ export default function DeleteButton({ listingId }) {
   return (
     <button
       onClick={() => setShowConfirm(true)}
-      className="inline-flex items-center justify-center gap-2 w-full rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-red-600 text-white hover:bg-red-700 h-10 px-4 py-2 shadow-sm hover:shadow"
+      className="inline-flex items-center justify-center gap-2 w-full rounded-lg text-base font-semibold ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-red-600 text-white hover:bg-red-700 h-12 px-6 py-3 shadow-md hover:shadow-lg"
     >
-      <Trash2 className="w-4 h-4" />
+      <Trash2 className="w-5 h-5" />
       게시글 삭제
     </button>
   );

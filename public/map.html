@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Kakao Map</title>
+    <style>html, body, #map { width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; }</style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<script type="text/javascript">
+    (function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const appKey = urlParams.get('appkey');
+
+        if (!appKey) {
+            document.body.innerHTML = 'Error: App key is missing.';
+            return;
+        }
+
+        const script = document.createElement('script');
+        script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${appKey}&libraries=services&autoload=false`;
+        script.async = true;
+        document.head.appendChild(script);
+
+        script.onload = () => {
+            kakao.maps.load(function() {
+                const mapContainer = document.getElementById('map');
+                const mapOption = {
+                    center: new kakao.maps.LatLng(37.566826, 126.9786567),
+                    level: 3
+                };
+
+                const map = new kakao.maps.Map(mapContainer, mapOption);
+                const marker = new kakao.maps.Marker();
+                const geocoder = new kakao.maps.services.Geocoder();
+
+                // 부모 창(React 앱)으로부터 메시지 수신
+                window.addEventListener('message', function(event) {
+                    const { type, payload } = event.data;
+                                if (type === 'PAN_TO') {
+                                    const { lat, lng } = payload;
+                                    const moveLatLon = new kakao.maps.LatLng(lat, lng);
+                                    map.panTo(moveLatLon);
+                                    marker.setPosition(moveLatLon);
+                                    marker.setMap(map);
+                    
+                                    // 이동된 위치의 주소 정보를 가져와서 부모창으로 전송
+                                    geocoder.coord2Address(lng, lat, function(result, status) {
+                                        if (status === kakao.maps.services.Status.OK) {
+                                            const addressName = result[0].road_address
+                                                ? result[0].road_address.address_name
+                                                : result[0].address.address_name;
+                                            
+                                            window.parent.postMessage({
+                                                type: 'LOCATION_SELECTED',
+                                                payload: {
+                                                    latitude: lat,
+                                                    longitude: lng,
+                                                    addressName: addressName
+                                                }
+                                            }, '*');
+                                        }
+                                    });
+                                }                });
+
+                // 지도 클릭 이벤트
+                kakao.maps.event.addListener(map, 'click', function(mouseEvent) {
+                    const latlng = mouseEvent.latLng;
+                    marker.setPosition(latlng);
+                    marker.setMap(map);
+
+                    geocoder.coord2Address(latlng.getLng(), latlng.getLat(), function(result, status) {
+                        if (status === kakao.maps.services.Status.OK) {
+                            const addressName = result[0].road_address
+                                ? result[0].road_address.address_name
+                                : result[0].address.address_name;
+                            
+                            window.parent.postMessage({
+                                type: 'LOCATION_SELECTED',
+                                payload: {
+                                    latitude: latlng.getLat(),
+                                    longitude: latlng.getLng(),
+                                    addressName: addressName
+                                }
+                            }, '*');
+                        }
+                    });
+                });
+            });
+        };
+
+        script.onerror = () => {
+            document.body.innerHTML = 'Error: Failed to load Kakao Maps SDK.';
+        };
+    })();
+</script>
+
+</body>
+</html>

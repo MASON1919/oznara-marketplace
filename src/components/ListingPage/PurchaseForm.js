@@ -22,8 +22,16 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Heart, MapPin, Truck } from "lucide-react";
 import { useLikeStore } from "../../store/useLikeStore";
+import PurchaseRequestButton from "./PurchaseRequestButton";
+import ChatButton from "../ChatButton";
 
-export default function PurchaseForm({ listingInfo, initialLike }) {
+export default function PurchaseForm({
+  listingInfo,
+  initialLike,
+  status,
+  hasTransaction,
+  isSeller,
+}) {
   // ============================================
   // Zustand store에서 상태와 액션 가져오기
   // ============================================
@@ -55,15 +63,11 @@ export default function PurchaseForm({ listingInfo, initialLike }) {
   // 좋아요 토글 핸들러
   // ============================================
   const handleFavorite = async () => {
+    if (isSeller) {
+      alert("본인 상품에는 좋아요를 할 수 없습니다");
+      return;
+    }
     await toggleFavorite(listingInfo.id);
-  };
-
-  // ============================================
-  // 구매하기 핸들러
-  // ============================================
-  const handleBuy = () => {
-    // 구매 로직 구현
-    console.log("구매하기 클릭");
   };
 
   return (
@@ -192,6 +196,7 @@ export default function PurchaseForm({ listingInfo, initialLike }) {
             좋아요 버튼 (Zustand로 관리)
             ============================================ */}
         <Button
+          disabled={isSeller}
           type="button"
           variant="ghost"
           size="icon"
@@ -204,13 +209,25 @@ export default function PurchaseForm({ listingInfo, initialLike }) {
         >
           <Heart className={cn("h-5 w-5", isLiked && "fill-current")} />
         </Button>
-        <Button
-          type="button"
-          className="flex-1 h-12 text-base"
-          onClick={handleBuy}
-        >
-          구매하기
-        </Button>
+        {/* ============================================
+            구매 요청/상태 버튼과 채팅 버튼
+            ============================================ */}
+        <div className="flex-1 flex gap-3">
+          <div className="flex-1">
+            <PurchaseRequestButton
+              listingId={listingInfo.id}
+              status={status}
+              hasTransaction={hasTransaction}
+              isSeller={isSeller}
+            />
+          </div>
+          <div className="flex-1">
+            <ChatButton
+              sellerId={listingInfo.userId}
+              listingId={listingInfo.id}
+            />
+          </div>
+        </div>
       </CardFooter>
     </Card>
   );
