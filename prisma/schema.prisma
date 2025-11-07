@@ -29,6 +29,7 @@ model User {
   transactionsAsBuyer  Transaction[] @relation("buyerTransactions")
   transactionsAsSeller Transaction[] @relation("sellerTransactions")
   listings       Listing[]
+  waitingNotifications WaitingNotification[]
 }
 
 model VerificationToken {
@@ -91,6 +92,7 @@ model Listing{
   likeCount Int      @default(0)
   transaction Transaction[]
   likes Like[]
+  waitingNotifications WaitingNotification[]
 }
 
 
@@ -117,4 +119,16 @@ model Like {
   @@id([userId, listingId])// 중복 찜 방지(복합 PK)
   @@index([userId])
   @@index([listingId])
+}
+model WaitingNotification {
+  id        String   @id @default(cuid())
+  userId    String
+  listingId String
+  createdAt DateTime @default(now())
+
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, listingId]) // 중복 알림 방지
+  @@index([listingId]) // 상품별 조회 최적화
 }

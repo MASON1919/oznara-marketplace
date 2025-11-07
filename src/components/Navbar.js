@@ -46,7 +46,7 @@ export function Navbar() {
   };
 
   return (
-    <div className="flex w-full justify-between bg-white p-4 shadow relative">
+    <div className="flex w-full justify-between bg-white p-4 shadow relative z-100">
       <div>
         <Link href="/">오즈나라</Link>
       </div>

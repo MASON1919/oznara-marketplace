@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getS3Url } from "@/lib/s3";
 import SearchResults from "@/components/SearchPage/SearchResults";
-import PaginationBar from "@/components/SearchPage/PaginationBar";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import Filter from "@/components/SearchPage/Filter";
@@ -12,6 +11,7 @@ export default async function SearchPage({ searchParams }) {
   const query = sp.query || "";
   const page = parseInt(sp.page) || 1;
   const category = sp.category || "all";
+  const sort = sp.sort || "latest";
   const minPrice = parseInt(sp.minPrice) || undefined;
   const maxPrice = parseInt(sp.maxPrice) || undefined;
 
@@ -21,6 +21,9 @@ export default async function SearchPage({ searchParams }) {
         where: { isCover: true },
         select: { s3Key: true },
         take: 1,
+      },
+      user: {
+        select: { id: true, name: true },
       },
       // 현재 로그인한 유저의 좋아요 정보 포함
       likes: userId
@@ -42,7 +45,10 @@ export default async function SearchPage({ searchParams }) {
       },
       ...(category !== "all" && category ? { category: category } : {}),
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: {
+      ...(sort === "latest" && { createdAt: "desc" }),
+      ...(sort === "popular" && { likeCount: "desc" }),
+    },
     skip: (page - 1) * 10,
     take: 10,
   });
@@ -65,12 +71,17 @@ export default async function SearchPage({ searchParams }) {
         initialCategory={category}
         initialMinPrice={minPrice}
         initialMaxPrice={maxPrice}
+        initialSort={sort}
       />
       <h2 className="text-2xl font-bold my-6 px-4">
         {query ? `"${query}" 검색 결과` : ""}
       </h2>
-      <SearchResults listings={listingsWithLikeStatus} s3Urls={s3Urls} />
-      <PaginationBar currentPage={page} />
+      <SearchResults
+        listings={listingsWithLikeStatus}
+        s3Urls={s3Urls}
+        userId={userId}
+        sp={sp}
+      />
     </div>
   );
 }
