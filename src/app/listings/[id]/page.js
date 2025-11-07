@@ -5,10 +5,11 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import ListingCarousel from "@/components/ListingPage/ListingCarousel";
 import PurchaseForm from "@/components/ListingPage/PurchaseForm";
 import ListingDescription from "@/components/ListingPage/ListingDescription";
-import ChatButton from "@/components/chat/ChatButton"; // 새로 추가된 채팅 버튼 컴포넌트
-import EditButton from "@/components/ListingPage/EditButton"; // 게시글 수정 버튼 컴포넌트
-import DeleteButton from "@/components/ListingPage/DeleteButton"; // 게시글 삭제 버튼 컴포넌트
-import RecentlyViewedTracker from "@/components/ListingPage/RecentlyViewedTracker"; // 추가
+import ChatButton from "@/components/chat/ChatButton";
+import EditButton from "@/components/ListingPage/EditButton";
+import DeleteButton from "@/components/ListingPage/DeleteButton";
+import RecentlyViewedTracker from "@/components/ListingPage/RecentlyViewedTracker";
+import SoldOutOverlay from "@/components/ListingPage/SoldOutOverlay";
 
 export default async function ListingPage({ params }) {
   // URL 파라미터에서 상품 ID를 가져옵니다.
@@ -69,13 +70,21 @@ export default async function ListingPage({ params }) {
     }
   }
 
+  // 현재 사용자가 구매자인지 확인
+  const isBuyer = latestTransaction?.buyerId === userId;
+
   // 상품 정보가 없을 경우 에러 메시지를 표시합니다.
   if (!listingInfo) {
     return <div>상품 정보를 찾을 수 없습니다</div>;
   }
 
   return (
-    <div className="mt-16 max-w-5xl mx-auto p-4">
+    <div className="mt-16 max-w-5xl mx-auto p-4 relative">
+      {/* 거래완료 오버레이 - 판매자가 아닌 경우에만 표시 */}
+      {status === "SoldOut" && userId !== listingInfo.userId && (
+        <SoldOutOverlay />
+      )}
+
       {/* 최근 본 상품 추적 컴포넌트 (UI 없음) */}
       <RecentlyViewedTracker
         listing={listingInfo}
@@ -94,6 +103,7 @@ export default async function ListingPage({ params }) {
             !!latestTransaction && latestTransaction.status !== "Canceled"
           }
           isSeller={userId === listingInfo.userId}
+          isBuyer={isBuyer}
         />
       </div>
       {/* 상품 설명 컴포넌트 */}

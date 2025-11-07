@@ -32,6 +32,7 @@ export default function PurchaseForm({
   status,
   hasTransaction,
   isSeller,
+  isBuyer, // 현재 사용자가 구매자인지 여부
 }) {
   const router = useRouter();
   // ============================================
@@ -78,17 +79,24 @@ export default function PurchaseForm({
         <CardTitle className="text-2xl leading-tight">
           {listingInfo.title}
         </CardTitle>
-                    <div className="text-3xl font-extrabold tracking-tight flex items-center gap-2"> {/* Added flex and items-center for alignment */}
-                      {listingInfo.price.toLocaleString()}원
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => router.push(`/search-price?query=${encodeURIComponent(listingInfo.title)}`)} // Changed navigation target
-                        className="text-xs h-6 px-2 py-0.5" // Smaller button
-                      >
-                        시세 조회
-                      </Button>
-                    </div>        <CardDescription className="text-sm text-muted-foreground">
+        <div className="text-3xl font-extrabold tracking-tight flex items-center gap-2">
+          {" "}
+          {/* Added flex and items-center for alignment */}
+          {listingInfo.price.toLocaleString()}원
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              router.push(
+                `/search-price?query=${encodeURIComponent(listingInfo.title)}`
+              )
+            } // Changed navigation target
+            className="text-xs h-6 px-2 py-0.5" // Smaller button
+          >
+            시세 조회
+          </Button>
+        </div>{" "}
+        <CardDescription className="text-sm text-muted-foreground">
           <span>{formatTimeAgo(listingInfo.createdAt)}</span>
           <span className="mx-2">·</span>
           <span>조회 {listingInfo.viewCount}</span>
@@ -231,6 +239,7 @@ export default function PurchaseForm({
                 status={status}
                 hasTransaction={hasTransaction}
                 isSeller={isSeller}
+                isBuyer={isBuyer}
               />
             </div>
           )}
@@ -238,6 +247,8 @@ export default function PurchaseForm({
             <ChatButton
               sellerId={listingInfo.userId}
               listingId={listingInfo.id}
+              status={status}
+              isBuyer={isBuyer}
             />
           </div>
         </div>

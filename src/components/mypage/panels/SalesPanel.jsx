@@ -177,24 +177,27 @@ export default function SalesPanel({ onClose }) {
                   </div>
 
                   <div className="flex gap-2 mt-3 pt-3 border-t border-gray-200">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleStatusChange(
-                          listing.id,
-                          "OnSale",
-                          listing.transaction[0]
-                        );
-                      }}
-                      disabled={listing.status === "OnSale"}
-                      className={`flex-1 px-3 py-2 text-xs font-semibold rounded-lg transition-all ${
-                        listing.status === "OnSale"
-                          ? "bg-gray-50 text-gray-400 border border-gray-100 cursor-not-allowed"
-                          : "bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 hover:border-red-300"
-                      }`}
-                    >
-                      거래취소
-                    </button>
+                    {/* 거래완료 상태가 아닐 때만 거래취소 버튼 표시 */}
+                    {listing.status !== "SoldOut" && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleStatusChange(
+                            listing.id,
+                            "OnSale",
+                            listing.transaction[0]
+                          );
+                        }}
+                        disabled={listing.status === "OnSale"}
+                        className={`flex-1 px-3 py-2 text-xs font-semibold rounded-lg transition-all ${
+                          listing.status === "OnSale"
+                            ? "bg-gray-50 text-gray-400 border border-gray-100 cursor-not-allowed"
+                            : "bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 hover:border-red-300"
+                        }`}
+                      >
+                        거래취소
+                      </button>
+                    )}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -208,7 +211,9 @@ export default function SalesPanel({ onClose }) {
                         listing.status === "SoldOut" ||
                         listing.status === "OnSale"
                       }
-                      className={`flex-1 px-3 py-2 text-xs font-semibold rounded-lg transition-all ${
+                      className={`${
+                        listing.status === "SoldOut" ? "flex-1" : "flex-1"
+                      } px-3 py-2 text-xs font-semibold rounded-lg transition-all ${
                         listing.status === "SoldOut"
                           ? "bg-gray-500 text-white shadow-md cursor-default"
                           : listing.status === "OnSale"
