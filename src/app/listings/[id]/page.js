@@ -110,8 +110,6 @@ export default async function ListingPage({ params }) {
       {/* 상품 설명 컴포넌트 */}
       <ListingDescription description={listingInfo.description} />
 
-
-
       {/* 수정/삭제 버튼 영역: 판매자만 자신의 게시글을 수정하거나 삭제할 수 있습니다 */}
       {userId && userId === listingInfo.userId && (
         <div className="mt-4 flex gap-3">
