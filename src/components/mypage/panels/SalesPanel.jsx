@@ -77,6 +77,30 @@ export default function SalesPanel({ onClose }) {
         throw new Error(error.error || "상태 변경에 실패했습니다.");
       }
 
+      // 거래 취소 시 대기 알림 발송
+      if (newStatus === "OnSale") {
+        try {
+          const notifyResponse = await fetch("/api/notifications/trigger", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ listingId }),
+          });
+
+          if (notifyResponse.ok) {
+            const notifyData = await notifyResponse.json();
+            if (notifyData.count > 0) {
+              alert(
+                `거래가 취소되었습니다!\n${notifyData.count}명에게 알림이 발송되었습니다.`
+              );
+            }
+          }
+        } catch (error) {
+          console.error("알림 발송 실패:", error);
+        }
+      }
+
       fetchSales();
     } catch (err) {
       alert(err.message);

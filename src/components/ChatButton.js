@@ -35,11 +35,26 @@ export default function ChatButton({ sellerId, listingId, status, isBuyer }) {
       );
 
       if (shouldNotify) {
-        // TODO: 예약 취소 알림 기능
-        // - Prisma 스키마에 WaitingNotification 테이블 추가
-        // - API: /api/notifications/add, /api/notifications/trigger
-        // - 거래 취소 시 대기자들에게 알림
-        alert("취소되면 알려드릴게요!");
+        // DB에 알림 설정 저장
+        try {
+          const notifyResponse = await fetch("/api/notifications/add", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ listingId }),
+          });
+
+          if (notifyResponse.ok) {
+            alert("알림이 설정되었습니다!\n취소되면 알려드릴게요.");
+          } else {
+            const errorData = await notifyResponse.json();
+            throw new Error(errorData.error || "알림 설정에 실패했습니다.");
+          }
+        } catch (error) {
+          console.error("알림 설정 실패:", error);
+          alert("알림 설정에 실패했습니다.");
+        }
       }
       return;
     }

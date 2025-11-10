@@ -48,7 +48,7 @@ export async function POST(req) {
     // 2) 이미 유저가 있으면(= 소셜 가입자 포함) → 비밀번호 설정 링크 발송
     if (existing) {
       // 이미 크리덴셜 설정돼 있으면 차단
-      if (existing.password) {
+      if (existing.password && existing.emailVerified) {
         return NextResponse.json(
           { error: "이미 존재하는 계정입니다." },
           { status: 409 }

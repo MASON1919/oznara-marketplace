@@ -13,8 +13,14 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
-import { X } from "lucide-react";
-
+import { X, ArrowUpDown, Check } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import { set } from "zod";
 const UNSET = -1;
 const CATEGORIES = [
   { label: "전체", slug: "all" },
@@ -34,7 +40,13 @@ export default function Filter({
   initialCategory,
   initialMinPrice,
   initialMaxPrice,
+  initialSort,
 }) {
+  if (initialSort === undefined) {
+    initialSort = "latest";
+  }
+  const [sort, setSort] = useState(initialSort);
+  const display = "정렬";
   const router = useRouter();
 
   const [category, setCategory] = useState(initialCategory || "");
@@ -61,6 +73,7 @@ export default function Filter({
     if (nextMin !== UNSET) params.set("minPrice", String(nextMin));
     if (nextMax !== UNSET) params.set("maxPrice", String(nextMax));
     if (initialQuery) params.set("query", initialQuery);
+    params.set("sort", sort);
     router.push(`/search?${params.toString()}`);
   };
   const applyFilters = () => pushWithState();
@@ -184,6 +197,32 @@ export default function Filter({
       <Separator className="my-4" />
 
       <div className="flex items-center justify-between gap-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm">
+              <ArrowUpDown className="mr-2 h-4 w-4" />
+              {display}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-44">
+            <DropdownMenuItem
+              onClick={() => setSort("latest")}
+              className="flex items-center gap-2"
+            >
+              <span className="flex-1">최신순</span>
+
+              {sort === "latest" && <Check className="h-4 w-4 opacity-70" />}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setSort("popular")}
+              className="flex items-center gap-2"
+            >
+              <span className="flex-1">인기순</span>
+
+              {sort === "popular" && <Check className="h-4 w-4 opacity-70" />}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <div className="flex items-center gap-2 justify-end w-full">
           <Button variant="secondary" type="button" onClick={resetFilters}>
             초기화
