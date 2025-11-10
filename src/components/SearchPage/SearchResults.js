@@ -7,15 +7,23 @@ import { cn } from "../../lib/utils";
 import { useLikeStore } from "../../store/useLikeStore";
 import { Badge } from "@/components/ui/badge";
 import { useInView } from "react-intersection-observer";
-
 export default function SearchResults({ listings, s3Urls, userId, sp }) {
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [allListings, setAllListings] = useState(listings);
+  const [page, setPage] = useState(sp.page ? parseInt(sp.page) : 1);
+  const [allS3Urls, setAllS3Urls] = useState(s3Urls);
   const { ref, inView, entry } = useInView({
     threshold: 0.1, // 요소의 10%가 보여도 "inView = true"
     rootMargin: "100px", // 화면 아래로 100px 남았을 때 미리 감지
     skip: loading, // 로딩 중일 때는 감지하지 않음
   });
+  useEffect(() => {
+    setAllListings(listings ?? []);
+    setAllS3Urls(s3Urls ?? []);
+    setPage(sp.page ? parseInt(sp.page) : 1);
+    setHasMore(true);
+  }, [listings, s3Urls, sp]);
   useEffect(() => {
     if (!inView || loading || !hasMore) return;
     const controller = new AbortController();
@@ -24,7 +32,7 @@ export default function SearchResults({ listings, s3Urls, userId, sp }) {
         setLoading(true);
         // 현재 URL 쿼리를 복사하고 page만 바꿔서 GET 요청
         const params = new URLSearchParams(sp);
-        params.set("page", sp.page ?? "1");
+        params.set("page", page ?? "1");
 
         const res = await fetch(`/api/infiniteScroll?${params.toString()}`, {
           method: "GET",
@@ -32,7 +40,11 @@ export default function SearchResults({ listings, s3Urls, userId, sp }) {
           signal: controller.signal,
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        //const data = await res.json();
+        const data = await res.json();
+        setAllListings((prev) => [...prev, ...data.listings]);
+        setPage((prev) => prev + 1);
+        setAllS3Urls((prev) => [...prev, ...data.s3Urls]);
+        setHasMore(data.hasMore);
       } catch (err) {
         if (err?.name !== "AbortError") {
           console.error("fetch error:", err);
@@ -77,12 +89,12 @@ export default function SearchResults({ listings, s3Urls, userId, sp }) {
   return (
     <div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 p-4">
-        {listings.map((item, index) => (
+        {allListings.map((item, index) => (
           <Link href={`/listings/${item.id}`} key={item.id || index}>
             <div className="rounded-2xl overflow-hidden border hover:shadow-lg transition-shadow bg-white">
               <div className="relative aspect-square bg-gray-100">
                 <Image
-                  src={s3Urls[index]}
+                  src={allS3Urls[index]}
                   alt={item.title}
                   className="w-full h-full object-cover"
                   width={300}

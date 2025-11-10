@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { getS3Url } from "@/lib/s3";
 
 export async function GET(request) {
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id ?? null;
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("query") || "";
-  const page = parseInt(searchParams.get("page")) || 1;
+  const page = parseInt(searchParams.get("page")) + 1 || 2;
   const category = searchParams.get("category") || "all";
   const sort = searchParams.get("sort") || "latest";
   const minPrice = parseInt(searchParams.get("minPrice")) || undefined;
@@ -47,5 +52,9 @@ export async function GET(request) {
     skip: (page - 1) * 10,
     take: 10,
   });
-  return NextResponse.json({ listings });
+  const s3Urls = listings.map((listing) =>
+    getS3Url(listing.listingImages[0]?.s3Key)
+  );
+  const hasMore = listings.length === 10;
+  return NextResponse.json({ listings, s3Urls, hasMore }, { status: 200 });
 }
