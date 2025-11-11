@@ -91,6 +91,11 @@ export default function Login() {
               <Input id="password" name="password" type="password" required />
             </div>
           </div>
+          {error && (
+            <p className="mt-2 text-sm text-red-600" role="alert">
+              {error}
+            </p>
+          )}
           <Button type="submit" className="w-full mt-6">
             로그인
           </Button>

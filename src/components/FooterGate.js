@@ -3,7 +3,7 @@
 
 import { usePathname } from "next/navigation";
 
-const HIDE_FOOTER_PATHS = ["/search"];
+const HIDE_FOOTER_PATHS = ["/search", "/search-price"];
 
 export default function FooterGate({ children }) {
   const pathname = usePathname();

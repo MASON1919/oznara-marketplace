@@ -115,7 +115,6 @@ export default function UploadForm() {
       files.forEach((file) => {
         formData.append("images", file);
       });
-      //여기서 에러남
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_SERVER_URL}/api/upload/images`,
         {
