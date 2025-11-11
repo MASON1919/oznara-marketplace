@@ -30,6 +30,7 @@ model User {
   transactionsAsSeller Transaction[] @relation("sellerTransactions")
   listings       Listing[]
   waitingNotifications WaitingNotification[]
+  sentNotifications    WaitingNotification[] @relation("buyerNotifications")
 }
 
 model VerificationToken {
@@ -72,6 +73,7 @@ model Transaction{
   transactionDate DateTime @default(now())
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
+  notifications WaitingNotification[]
 }
 
 model Listing{
@@ -120,15 +122,29 @@ model Like {
   @@index([userId])
   @@index([listingId])
 }
+enum NotificationType {
+  CANCEL_RESERVATION  // 예약 취소 알림
+  PURCHASE_REQUEST    // 구매 요청 알림
+}
+
 model WaitingNotification {
-  id        String   @id @default(cuid())
-  userId    String
-  listingId String
-  createdAt DateTime @default(now())
+  id            String   @id @default(cuid())
+  userId        String
+  listingId     String
+  type          NotificationType @default(CANCEL_RESERVATION)
+  createdAt     DateTime @default(now())
+  
+  // 구매자 정보 (구매 요청 알림용)
+  buyerId       String?
+  buyer         User? @relation("buyerNotifications", fields: [buyerId], references: [id], onDelete: SetNull)
+  
+  // Transaction 연결
+  transactionId String?
+  transaction   Transaction? @relation(fields: [transactionId], references: [id], onDelete: Cascade)
 
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  user          User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing       Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, listingId]) // 중복 알림 방지
-  @@index([listingId]) // 상품별 조회 최적화
+  @@unique([userId, listingId, type]) // 중복 방지
+  @@index([userId, type]) // 타입별 알림 조회
 }
