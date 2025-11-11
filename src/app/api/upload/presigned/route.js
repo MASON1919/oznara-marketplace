@@ -1,3 +1,5 @@
+//업로드용 서버가 생겼으니 사용되지 않음
+
 import { NextResponse } from "next/server";
 import { getPresignedUrl } from "@/lib/s3";
 

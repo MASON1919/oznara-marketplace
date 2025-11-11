@@ -75,7 +75,7 @@ export default function UploadForm() {
   const router = useRouter();
   const handleUpload = async () => {
     try {
-      const promises = files.map(async (file) => {
+      /*const promises = files.map(async (file) => {
         const response = await fetch("/api/upload/presigned", {
           method: "POST",
           body: JSON.stringify({
@@ -109,6 +109,28 @@ export default function UploadForm() {
 
       const keys = await Promise.all(promises);
       setFiles([]);
+      return keys;*/
+      //업로드용 서버로 변경
+      const formData = new FormData();
+      files.forEach((file) => {
+        formData.append("images", file);
+      });
+      //여기서 에러남
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_SERVER_URL}/api/upload/images`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("업로드 실패");
+      }
+
+      const data = await response.json();
+      setFiles([]);
+      const keys = data.files.map((f) => f.key);
       return keys;
     } catch (error) {
       console.error("업로드 중 오류 발생 : ", error);

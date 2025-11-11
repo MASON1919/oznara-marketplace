@@ -25,6 +25,7 @@ export default function SearchResults({ listings, s3Urls, userId, sp }) {
     setHasMore(true);
   }, [listings, s3Urls, sp]);
   useEffect(() => {
+    console.log("inView:", inView, "hasMore:", hasMore, "loading:", loading);
     if (!inView || loading || !hasMore) return;
     const controller = new AbortController();
     (async () => {
