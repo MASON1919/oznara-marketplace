@@ -144,7 +144,7 @@ export default function AddressPanel({ onClose }) {
     // ========================= 렌더 =========================
     return (
         <Sheet open={true} onOpenChange={onClose}>
-            <SheetContent side="right" className="w-full md:max-w-xl">
+            <SheetContent side="right" className="w-full md:max-w-xl z-[1000]">
 
                 {/* 상단 버튼 */}
                 {currentPage === "manage" ? (

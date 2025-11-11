@@ -19,7 +19,6 @@ const menuItemsTop = [
     { label: "구매내역", key: "purchases" },
     { label: "택배", key: "delivery" },
     { label: "찜한 상품", key: "wishlist" },
-    { label: "안심결제 정산내역", key: "escrow" },
 ];
 
 const menuItemsBottom = [
@@ -68,7 +67,6 @@ export default function DashboardWithSidebar() {
             {openPanel === "purchases" && <PurchasesPanel onClose={() => setOpenPanel(null)} />}
             {openPanel === "delivery" && <DeliveryPanel onClose={() => setOpenPanel(null)} />}
             {openPanel === "wishlist" && <WishlistPanel onClose={() => setOpenPanel(null)} />}
-            {openPanel === "escrow" && <EscrowPanel onClose={() => setOpenPanel(null)} />}
             {openPanel === "bank" && <BankPanel onClose={() => setOpenPanel(null)} />}
             {openPanel === "address" && <AddressPanel onClose={() => setOpenPanel(null)} />}
             {openPanel === "reviews" && <ReviewsPanel onClose={() => setOpenPanel(null)} />}
