@@ -12,6 +12,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 // `Badge`: "New" 같은 작은 알림을 표시할 때 쓰는 부품
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button'; // 버튼 컴포넌트 추가
+import { Trash2 } from 'lucide-react'; // 휴지통 아이콘 추가
 
 /**
  * 이 페이지는 내가 참여하고 있는 모든 채팅방 목록을 보여줍니다.
@@ -88,6 +90,37 @@ export default function MyChatsPage() {
     return bTime - aTime; // 최신 메시지 시간 순서대로 정렬합니다.
   });
 
+  /**
+   * 채팅방 나가기 버튼을 눌렀을 때 실행되는 기능입니다.
+   * @param {string} chatRoomId - 나갈 채팅방의 ID
+   */
+  const handleLeaveChat = async (chatRoomId) => {
+    if (!confirm('정말로 이 채팅방을 나가시겠습니까? 채팅 내역이 삭제됩니다.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/chat/leave', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ chatRoomId }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to leave chatroom');
+      }
+
+      alert('채팅방에서 성공적으로 나갔습니다.');
+      // ChatContext가 자동으로 userChats를 업데이트하므로 별도의 상태 업데이트는 필요 없습니다.
+    } catch (error) {
+      console.error("채팅방 나가기 중 오류 발생:", error);
+      alert(`오류: ${error.message}`);
+    }
+  };
+
   // 화면에 보여줄 내용입니다.
   return (
     <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 mt-16">
@@ -99,27 +132,36 @@ export default function MyChatsPage() {
           {sortedChats.map((chat) => {
             const unread = isUnread(chat); // 이 채팅방이 안 읽었는지 다시 확인합니다.
             return (
-              // 채팅방을 누르면 해당 채팅방 페이지로 이동하는 링크입니다.
-              <Link href={`/chatroom/${chat.id}`} key={chat.id}>
-                {/* 안 읽은 채팅방은 파란색 테두리와 배경색으로 더 잘 보이게 표시합니다. */}
-                <div className={`block p-6 border rounded-lg shadow-sm hover:shadow-md transition-shadow ${ 
+              <div
+                key={chat.id}
+                className={`block p-6 border rounded-lg shadow-sm hover:shadow-md transition-shadow ${
                   unread ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
-                }`}
-                >
+                } flex justify-between items-center`} // flex와 justify-between 추가
+              >
+                <Link href={`/chatroom/${chat.id}?otherUser=${encodeURIComponent(JSON.stringify(chat.otherParticipant))}`} className="flex-grow"> {/* flex-grow 추가 */}
                   <div className="flex justify-between items-center">
                     <p className="font-semibold text-lg">
-                      {/* 지금은 상대방의 ID를 보여주지만, 나중에는 상대방의 이름을 보여주도록 바꿀 수 있습니다. */}
-                      상대방 ID: {getOtherParticipantId(chat.participants)}
+                      {chat.otherParticipant?.name || chat.otherParticipant?.email || `상대방 ID: ${getOtherParticipantId(chat.participants)}`}
                     </p>
                     {/* 안 읽은 메시지가 있다면 "New"라는 알림을 보여줍니다. */}
                     {unread && <Badge>New</Badge>}
                   </div>
-                  <p className={`mt-1 text-sm ${unread ? 'text-blue-600' : 'text-gray-500'}`}
-                  >
+                  <p className={`mt-1 text-sm ${unread ? 'text-blue-600' : 'text-gray-500'}`}>
                     채팅방으로 이동하기
                   </p>
-                </div>
-              </Link>
+                </Link>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => {
+                    e.preventDefault(); // Link 클릭 방지
+                    handleLeaveChat(chat.id);
+                  }}
+                  className="ml-4 text-gray-500 hover:text-red-500"
+                >
+                  <Trash2 className="h-5 w-5" />
+                </Button>
+              </div>
             );
           })}
         </div>

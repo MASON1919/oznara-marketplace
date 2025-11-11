@@ -20,7 +20,7 @@ import { Button } from '@/components/ui/button';
  * @param {object} props - 이 버튼에 전달되는 정보들
  * @param {string} props.sellerId - 채팅을 걸고 싶은 판매자의 고유 ID
  */
-export default function ChatButton({ sellerId }) {
+export default function ChatButton({ sellerId, listingId }) {
   // 1. 내 로그인 정보와 상태를 가져옵니다.
   const { data: session, status } = useSession();
   // 2. 페이지를 이동시킬 때 사용하는 도우미입니다.
@@ -61,7 +61,7 @@ export default function ChatButton({ sellerId }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ sellerId }),
+        body: JSON.stringify({ sellerId, listingId }),
       });
 
       // 4. 만약 서버에서 문제가 생겼다고 알려주면, 에러 메시지를 보여줍니다.
@@ -74,9 +74,12 @@ export default function ChatButton({ sellerId }) {
       const { chatRoomId, otherUser } = await response.json();
       
       // 6. 받아온 정보들을 가지고 해당 채팅방 페이지로 이동합니다.
-      // 이때, 상대방 정보를 주소(URL)에 함께 담아서 보내주면,
-      // 채팅방 페이지에서 상대방 정보를 다시 가져올 필요 없이 바로 쓸 수 있어서 더 빠릅니다.
-      router.push(`/chatroom/${chatRoomId}?otherUser=${encodeURIComponent(JSON.stringify(otherUser))}`);
+      const targetUrl = `/chatroom/${chatRoomId}?otherUser=${encodeURIComponent(JSON.stringify(otherUser))}${listingId ? `&listingId=${listingId}` : ''}`;
+      
+      // [핵심 로그] 최종적으로 이동할 URL을 콘솔에 출력합니다.
+      console.log("ChatButton: Navigating to URL:", targetUrl);
+
+      router.push(targetUrl);
 
     } catch (error) {
       // 7. 혹시라도 예상치 못한 문제가 생기면, 콘솔에 에러를 기록하고 사용자에게 알립니다.
