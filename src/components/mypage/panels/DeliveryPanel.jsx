@@ -87,7 +87,7 @@ export default function DeliveryPanel({ onClose }) {
             {/* p-0: 내부에서 패딩을 제어하기 위해 기본 패딩 제거, flex/flex-col: 헤더/탭/컨텐츠 수직 정렬 */}
             <SheetContent
                 side="right"
-                className="w-full md:max-w-xl p-0 flex flex-col"
+                className="w-full md:max-w-xl p-0 flex flex-col z-[1000]"
             >
                 <div className="flex justify-between items-center">
                     {currentPage === "delivery" ? (

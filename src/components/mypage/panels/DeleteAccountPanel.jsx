@@ -52,7 +52,7 @@ export default function DeleteAccountPanel({ onClose }) {
 
     return (
         <Sheet open={true} onOpenChange={onClose}>
-            <SheetContent side="right" className="w-full md:max-w-xl">
+            <SheetContent side="right" className="w-full md:max-w-xl z-[1000]">
                 <SheetClose className="absolute top-4 left-4 cursor-pointer">
                     <ChevronLeft />
                 </SheetClose>
