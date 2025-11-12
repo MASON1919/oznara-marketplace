@@ -10,6 +10,10 @@ import EditButton from "@/components/ListingPage/EditButton";
 import DeleteButton from "@/components/ListingPage/DeleteButton";
 import RecentlyViewedTracker from "@/components/ListingPage/RecentlyViewedTracker";
 import SoldOutOverlay from "@/components/ListingPage/SoldOutOverlay";
+import Counting from "@/components/ListingPage/Counting";
+import { cookies } from "next/headers";
+import { redis } from "@/lib/redis";
+import { db } from "@/lib/firebase";
 
 export default async function ListingPage({ params }) {
   // URL 파라미터에서 상품 ID를 가져옵니다.
@@ -42,6 +46,21 @@ export default async function ListingPage({ params }) {
       },
     },
   });
+  // id 는 상품의 id
+  const cookieStore = await cookies();
+  const anonId = cookieStore.get("oz_anon")?.value;
+  const seenKey = `seen:${id}:${anonId}`;
+  const firstSeen = await redis.set(seenKey, "1", { nx: true, ex: 60 * 60 });
+
+  if (firstSeen) {
+    await prisma.listing.update({
+      where: { id },
+      data: {
+        viewCount: { increment: 1 },
+      },
+    });
+    listingInfo.viewCount += 1;
+  }
 
   // S3 키를 사용하여 이미지 URL을 생성합니다.
 
