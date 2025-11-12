@@ -53,6 +53,7 @@ export default function ChatPage({ params: paramsPromise }) { // `params`라는 
   // `otherUser`라는 이름으로 전달된 쿼리 파라미터 값을 가져옵니다.
   // (이 정보는 보통 `ChatButton`에서 채팅방을 열 때 상대방 정보를 미리 넘겨줍니다.)
   const otherUserParam = searchParams.get('otherUser');
+  const listingId = searchParams.get('listingId');
   
   // 가져온 `otherUserParam`이 있다면, JSON 형태의 문자열을 실제 JavaScript 객체로 변환합니다.
   // 이 정보는 `useChat` 도우미 훅에 전달되어, 채팅방에 들어서자마자 상대방 정보를 보여주는 데 쓰입니다.
@@ -75,7 +76,8 @@ export default function ChatPage({ params: paramsPromise }) { // `params`라는 
     handleSendMessage,// 메시지를 보내는 기능
     handleFileSelect, // 파일을 선택했을 때 처리하는 기능
     handleSendLocation, // 위치 정보를 보내는 기능
-  } = useChat(resolvedChatRoomId, initialOtherUser); // 채팅방 ID와 초기 상대방 정보를 `useChat` 훅에 전달합니다.
+    listingDetails,   // 현재 채팅방과 연결된 상품의 상세 정보
+  } = useChat(resolvedChatRoomId, initialOtherUser, listingId); // 채팅방 ID, 초기 상대방 정보, 상품 ID를 `useChat` 훅에 전달합니다.
 
   // 위치 선택 팝업창(모달)이 열려있는지 닫혀있는지 상태를 관리하는 변수입니다.
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
@@ -132,8 +134,8 @@ export default function ChatPage({ params: paramsPromise }) { // `params`라는 
     <div className="flex flex-col h-[calc(100vh-4rem)] max-w-3xl mx-auto w-full">
       <Card className="w-full h-full flex flex-col">
         <CardHeader>
-          {/* 채팅방 상단 제목 부분: 상대방의 프로필 사진과 이름을 보여줍니다. */}
-          <ChatHeader otherUser={otherUser} />
+          {/* [수정] ChatHeader에 chatRoomId prop을 전달합니다. */}
+          <ChatHeader otherUser={otherUser} listing={listingDetails} chatRoomId={resolvedChatRoomId} />
         </CardHeader>
         <CardContent className="flex-grow overflow-y-auto p-4">
           {/* 메시지 목록 부분: 모든 메시지를 시간 순서대로 보여줍니다. */}

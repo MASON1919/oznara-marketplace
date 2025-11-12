@@ -59,77 +59,94 @@ export function ChatProvider({ children }) {
     }
 
     // 2. Firebase Firestore에서 내 채팅방 정보를 가져올 준비를 합니다.
-    //    `chatrooms`라는 데이터 묶음(컬렉션)에서,
-    //    `participants`라는 목록에 내 ID가 들어있는 채팅방들만 골라달라고 요청합니다.
     const q = query(
       collection(db, 'chatrooms'),
       where('participants', 'array-contains', session.user.id)
     );
 
-    // 3. `onSnapshot`은 Firebase에게 "이 채팅방 목록이 바뀌면 나에게 바로 알려줘!" 하고 부탁하는 기능입니다.
-    //    데이터베이스에 채팅방이 새로 생기거나, 메시지가 오거나 하면 이 안의 코드가 자동으로 다시 실행됩니다.
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const chats = []; // 새로 가져온 채팅방 목록을 임시로 저장할 곳
-      let unreadCount = 0; // 읽지 않은 채팅방 개수를 셀 변수
+    // 3. `onSnapshot`으로 실시간 데이터 변경을 감지합니다.
+      const unsubscribe = onSnapshot(q, async (querySnapshot) => {
+        const rawChats = [];
+        querySnapshot.forEach((doc) => {
+          rawChats.push({ id: doc.id, ...doc.data() });
+        });
 
-      // 4. 가져온 모든 채팅방 정보를 하나씩 살펴봅니다.
-      querySnapshot.forEach((doc) => {
-        const chatData = doc.data();
-        const chat = { id: doc.id, ...chatData };
-        chats.push(chat);
+        // [추가] '숨김' 처리된 채팅방을 필터링합니다.
+        const visibleChats = rawChats.filter(chat => !chat.hiddenFor?.includes(session.user.id));
 
-        // --- 읽지 않은 메시지 개수 세는 방법 ---
+        // 데이터 유효성 검사 및 필터링
+        const validChats = [];
+        const participantIds = new Set();
+        let unreadMessages = 0;
 
-        // 만약 마지막 메시지를 내가 보낸 것이라면, 이 채팅방은 '읽지 않음'으로 세지 않습니다.
-        if (chat.lastMessageSenderId === session.user.id) {
-          return; // 다음 채팅방으로 넘어갑니다.
-        }
+        for (const chat of visibleChats) { // [수정] visibleChats를 사용하도록 변경
+          const otherParticipantId = chat.participants?.find(p => p !== session.user.id);
 
-        // 마지막 메시지가 언제 왔는지, 내가 마지막으로 언제 읽었는지 시간을 가져옵니다.
-        const lastMessageTimestamp = chat.lastMessageTimestamp?.toDate();
-        const userLastRead = chat.lastRead?.[session.user.id]?.toDate();
-
-        // 5. 이 채팅방에 읽지 않은 메시지가 있는지 확인합니다.
-        if (lastMessageTimestamp && userLastRead) {
-          // 마지막 메시지가 내가 마지막으로 읽은 시간보다 나중에 왔다면, 읽지 않은 메시지가 있는 것입니다.
-          if (lastMessageTimestamp > userLastRead) {
-            unreadCount++;
+          // 데이터가 손상된 채팅방(참여자가 2명이 아니거나 상대방 ID를 찾을 수 없는 경우)을 필터링합니다.
+          if (chat.participants?.length !== 2 || !otherParticipantId) {
+            console.warn("손상된 채팅방 데이터를 필터링했습니다:", chat);
+            continue; // 이 채팅방은 건너뜁니다.
           }
-        } else if (lastMessageTimestamp) {
-          // 만약 내가 이 채팅방을 한 번도 읽은 적이 없다면 (userLastRead가 없다면),
-          // 마지막 메시지가 있기만 해도 무조건 '읽지 않음'으로 셉니다.
-          unreadCount++;
+          
+          validChats.push(chat);
+          participantIds.add(otherParticipantId);
+
+          // 안 읽은 메시지 카운트 로직
+          if (chat.lastMessageTimestamp && chat.lastMessageSenderId !== session.user.id) {
+            const lastReadTime = chat.lastRead?.[session.user.id]?.toDate();
+            const lastMessageTime = chat.lastMessageTimestamp.toDate();
+            if (!lastReadTime || lastMessageTime > lastReadTime) {
+              unreadMessages += 1;
+            }
+          }
         }
+
+        // 유효한 채팅방이 있을 경우에만 상대방 정보를 조회합니다.
+        if (participantIds.size > 0) {
+          try {
+            const res = await fetch('/api/users/details', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ids: Array.from(participantIds) }),
+            });
+
+            if (res.ok) {
+              const usersById = await res.json();
+              const chatsWithDetails = validChats.map(chat => {
+                const otherParticipantId = chat.participants.find(p => p !== session.user.id);
+                return {
+                  ...chat,
+                  otherParticipant: usersById[otherParticipantId] || null,
+                };
+              });
+              setUserChats(chatsWithDetails);
+            } else {
+              console.error("Failed to fetch participant details: API response not OK", res.status, res.statusText);
+              setUserChats(validChats); // API 실패 시, 유효한 채팅 목록만이라도 설정
+            }
+          } catch (error) {
+            console.error("Failed to fetch participant details: Network or other error", error);
+            setUserChats(validChats); // 네트워크 오류 시, 유효한 채팅 목록만이라도 설정
+          }
+        } else {
+          setUserChats(validChats); // 참여할 상대방이 없는 경우 (모든 채팅이 손상된 경우 등)
+        }
+
+        setUnreadChatsCount(unreadMessages);
       });
 
-      // 6. 새로 가져온 채팅방 목록과 읽지 않은 개수를 화면에 반영합니다.
-      //    이 변수들이 바뀌면, 이 정보를 쓰는 모든 컴포넌트들이 자동으로 업데이트됩니다.
-      setUserChats(chats);
-      setUnreadChatsCount(unreadCount);
-    });
-
-    // 7. 이 페이지가 사라지거나, 내 로그인 정보가 바뀌어서 이 기능이 다시 시작될 때,
-    //    이전에 Firebase에게 "실시간으로 알려줘!" 하고 부탁했던 것을 멈춥니다.
-    //    (불필요하게 계속 정보를 받아오는 것을 막기 위함입니다.)
     return () => unsubscribe();
-  }, [session]); // 내 로그인 정보(`session`)가 바뀔 때마다 이 기능이 다시 실행됩니다.
+  }, [session]);
 
-  // `ChatContext.Provider`는 `value` 안에 있는 정보들을
-  // 이 컴포넌트가 감싸고 있는 모든 다른 컴포넌트들에게 전달해줍니다.
   return (
     <ChatContext.Provider value={{ userChats, unreadChatsCount }}>
-      {children} {/* `ChatProvider`가 감싸고 있는 다른 모든 컴포넌트들 */}
+      {children}
     </ChatContext.Provider>
   );
 }
 
 /**
  * `useChat`은 `ChatContext`라는 "정보 보관함"에서 정보를 쉽게 꺼내 쓸 수 있도록 도와주는 기능입니다.
- * 이 기능을 사용하면 `useContext(ChatContext)`처럼 복잡하게 쓰지 않고,
- * `useChat()` 한 줄로 내가 참여하고 있는 채팅방 목록(`userChats`)과 
- * 읽지 않은 채팅방 개수(`unreadChatsCount`)를 바로 가져올 수 있습니다.
- * 
- * @returns {ChatContextType} 채팅 관련 정보들
  */
 export function useChat() {
   return useContext(ChatContext);

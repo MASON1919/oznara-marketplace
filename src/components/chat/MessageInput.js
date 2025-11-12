@@ -57,13 +57,19 @@ const MessageInput = ({
     // 만약 `Enter` 키를 눌렀고, `Shift` 키는 누르지 않았다면
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault(); // `Enter` 키를 눌렀을 때 기본적으로 줄바꿈이 되는 것을 막습니다.
-      handleSendMessage(e); // 메시지를 보내는 기능을 실행합니다.
+      
+      // [수정] handleSendMessage를 직접 호출하는 대신, form의 submit 이벤트를 트리거합니다.
+      // 이렇게 하면 모든 메시지 전송 로직이 form의 onSubmit 핸들러 하나로 통일됩니다.
+      if (newMessage.trim()) { // 메시지가 비어있지 않을 때만 제출
+        e.currentTarget.form.requestSubmit();
+      }
     }
   };
 
   // 화면에 보여줄 메시지 입력창과 버튼들입니다.
   return (
     // `form` 태그로 감싸서 `Enter` 키로도 메시지를 보낼 수 있게 합니다.
+    // [수정] form의 onSubmit 이벤트로 메시지 전송을 처리합니다.
     <form onSubmit={handleSendMessage} className="p-4 border-t bg-background flex w-full items-start gap-3">
         {/* 
           파일(사진 등)을 선택할 때 쓰는 버튼인데, 기본 디자인이 예쁘지 않아서 화면에는 숨겨둡니다.
@@ -111,6 +117,7 @@ const MessageInput = ({
           className="flex-1 min-h-[40px] max-h-[150px] resize-none bg-transparent focus:outline-none" // 입력창 디자인 설정
         />
         {/* 메시지 전송 버튼 */}
+        {/* [수정] onClick 핸들러를 제거하고, form의 submit 이벤트에 의존합니다. */}
         <Button type="submit" disabled={uploading || !newMessage.trim()} className="self-end">
           {uploading ? "전송 중..." : "전송"} {/* 파일을 올리는 중이면 텍스트를 바꿉니다. */}
         </Button>
