@@ -1,3 +1,4 @@
+"use client";
 import Image from "next/image";
 import {
   Carousel,
@@ -12,6 +13,7 @@ const images = [
   "/joonggoImages/oznara-main-1.png",
   "/joonggoImages/oznara-main-2.png",
   "/joonggoImages/oznara-main-3.png",
+  "/joonggoImages/oznara-main-4.png",
 ];
 
 export function MainCarousel() {
@@ -34,10 +36,7 @@ export function MainCarousel() {
         </div>
       </div>
 
-      <Carousel
-        className="w-full"
-        opts={{ loop: true, autoplay: true, interval: 2000 }}
-      >
+      <Carousel className="w-full" opts={{ loop: true }}>
         <CarouselContent className="-ml-2">
           {images.map((image, index) => (
             <CarouselItem
