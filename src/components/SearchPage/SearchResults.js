@@ -130,7 +130,7 @@ export default function SearchResults({ listings, s3Urls, userId, sp }) {
                   <div className="flex items-center gap-1 text-xs text-gray-500">
                     <Clock className="w-3 h-3" />
                     <span>
-                      {item.createdAt ? getTimeAgo(item.createdAt) : "방금 전"}
+                      {item.createdAt ? formatTimeAgo(item.createdAt) : "방금 전"}
                     </span>
                   </div>
                   {/* 우측: 내 상품 배지 */}
