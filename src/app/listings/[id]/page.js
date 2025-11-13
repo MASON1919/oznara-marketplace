@@ -24,18 +24,27 @@ export default async function ListingPage({ params }) {
 
   const listingInfo = await prisma.listing.findUnique({
     where: { id },
-    include: {
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      price: true,
+      category: true,
+      method: true,
+      userId: true,
+      viewCount: true,
+      likeCount: true,
+      createdAt: true, // ✅ 등록 시간 추가
       listingImages: {
         select: { s3Key: true },
       },
       likes: userId
         ? {
-            // 사용자가 로그인되어 있다면 좋아요 여부를 확인합니다.
             where: { userId: userId },
             select: { userId: true },
             take: 1,
           }
-        : false, // 로그인되어 있지 않다면 좋아요 정보를 가져오지 않습니다.
+        : false,
       transaction: {
         orderBy: { createdAt: "desc" },
         take: 1,

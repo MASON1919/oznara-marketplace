@@ -2,8 +2,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Heart } from "lucide-react";
-import { cn } from "../../lib/utils";
+import { Heart, Clock } from "lucide-react";
+import { cn, formatTimeAgo } from "../../lib/utils";
 import { useLikeStore } from "../../store/useLikeStore";
 import { Badge } from "@/components/ui/badge";
 import { useInView } from "react-intersection-observer";
@@ -125,16 +125,24 @@ export default function SearchResults({ listings, s3Urls, userId, sp }) {
                 <p className="text-sm font-medium text-gray-800 line-clamp-1">
                   {item.title}
                 </p>
-                <div className="flex justify-between items-center px-3 mt-2">
-                  <p className="text-base font-semibold text-gray-900 mt-1">
-                    {Number(item.price).toLocaleString()}원
-                  </p>
+                <div className="flex justify-between items-center mt-2">
+                  {/* 좌측: 시간 */}
+                  <div className="flex items-center gap-1 text-xs text-gray-500">
+                    <Clock className="w-3 h-3" />
+                    <span>
+                      {item.createdAt ? getTimeAgo(item.createdAt) : "방금 전"}
+                    </span>
+                  </div>
+                  {/* 우측: 내 상품 배지 */}
                   {userId === item.user.id && (
                     <Badge className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800">
                       내 상품
                     </Badge>
                   )}
                 </div>
+                <p className="text-base font-semibold text-gray-900 mt-1">
+                  {Number(item.price).toLocaleString()}원
+                </p>
               </div>
             </div>
           </Link>

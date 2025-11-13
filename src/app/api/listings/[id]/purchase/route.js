@@ -58,17 +58,36 @@ export async function POST(request, { params }) {
       );
     }
 
-    // 거래 생성
-    const transaction = await prisma.transaction.create({
-      data: {
-        listingId: id,
-        buyerId: buyerId,
-        sellerId: listing.userId,
-        status: "Pending",
-      },
+    // 거래 생성 & 알림 생성 (트랜잭션)
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Transaction 생성
+      const transaction = await tx.transaction.create({
+        data: {
+          listingId: id,
+          buyerId: buyerId,
+          sellerId: listing.userId,
+          status: "Pending",
+        },
+      });
+
+      // 2. 판매자에게 구매 요청 알림 생성
+      const notification = await tx.waitingNotification.create({
+        data: {
+          userId: listing.userId, // 판매자
+          listingId: id,
+          type: "PURCHASE_REQUEST",
+          buyerId: buyerId,
+          transactionId: transaction.id,
+        },
+      });
+
+      return { transaction, notification };
     });
 
-    return NextResponse.json({ success: true, transaction });
+    return NextResponse.json({
+      success: true,
+      transaction: result.transaction,
+    });
   } catch (error) {
     console.error("구매 요청 오류:", error);
     return NextResponse.json(
@@ -124,10 +143,23 @@ export async function DELETE(request, { params }) {
       );
     }
 
-    // 거래 취소 (상태를 Canceled로 변경)
-    await prisma.transaction.update({
-      where: { id: listing.transaction[0].id },
-      data: { status: "Canceled" },
+    // 거래 취소 & 알림 삭제 (트랜잭션)
+    await prisma.$transaction(async (tx) => {
+      const transactionId = listing.transaction[0].id;
+
+      // 1. Transaction 상태 변경
+      await tx.transaction.update({
+        where: { id: transactionId },
+        data: { status: "Canceled" },
+      });
+
+      // 2. 연결된 구매 요청 알림 삭제
+      await tx.waitingNotification.deleteMany({
+        where: {
+          transactionId: transactionId,
+          type: "PURCHASE_REQUEST",
+        },
+      });
     });
 
     return NextResponse.json({ success: true });

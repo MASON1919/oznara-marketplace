@@ -16,7 +16,12 @@ export async function GET(request) {
   const maxPrice = parseInt(searchParams.get("maxPrice")) || undefined;
 
   const listings = await prisma.listing.findMany({
-    include: {
+    select: {
+      id: true,
+      title: true,
+      price: true,
+      category: true,
+      createdAt: true, // ✅ 등록 시간 추가
       listingImages: {
         where: { isCover: true },
         select: { s3Key: true },
