@@ -16,9 +16,10 @@ import { MapPin } from 'lucide-react';
  * @param {object} props.session - 현재 로그인한 내 정보
  * @param {object} props.otherUser - 채팅 상대방의 정보
  */
-const Message = ({ msg, session, otherUser }) => {
+const Message = ({ msg, session, otherUser, isRead }) => {
   // 1. 이 메시지를 내가 보냈는지, 상대방이 보냈는지 확인합니다.
   const isOwnMessage = msg.senderId === session.user.id;
+
 
   /**
    * 메시지 종류(`msg.type`)에 따라 메시지 내용을 다르게 보여주는 기능입니다.
@@ -76,27 +77,37 @@ const Message = ({ msg, session, otherUser }) => {
         </Avatar>
       )}
       
-      {/* 메시지 내용이 들어가는 말풍선 부분입니다. */}
-      <div
-        className={`rounded-lg px-3 py-2 text-sm max-w-xs md:max-w-md ${
-          isOwnMessage
-            ? "bg-blue-500 text-white" // 내가 보낸 메시지는 파란색 배경에 흰 글씨
-            : "bg-gray-200 dark:bg-gray-700" // 상대방 메시지는 회색 배경
-        }`}
-      >
-        
-        {/* 메시지 종류에 따라 다르게 보여줄 내용을 여기에 넣습니다. */}
-        {renderContent()}
+      {/* 메시지 내용과 시간을 함께 묶는 컨테이너입니다. */}
+      <div className="flex items-end gap-2">
+        {/* 내가 보낸 메시지일 경우, '읽음' 상태를 시간 왼쪽에 표시합니다. */}
+        {isOwnMessage && (
+          <span className="text-xs text-gray-500">
+            {isRead ? "읽음" : "1"}
+          </span>
+        )}
 
-        {/* 메시지를 보낸 시간을 보여줍니다. */}
-        <p className="text-xs opacity-70 mt-1 text-right">
-          {/* 
-            Firebase에서 가져온 시간 정보는 특별한 형태라서,
-            `toDate()`라는 기능을 써서 우리가 아는 시간 형태로 바꿔줘야 합니다.
-            혹시 시간 정보가 아직 준비되지 않았을 수도 있으니, 안전하게 확인하고 보여줍니다.
-          */}
-          {msg.timestamp?.toDate ? new Date(msg.timestamp.toDate()).toLocaleTimeString() : ''}
-        </p>
+        {/* 메시지 내용이 들어가는 말풍선 부분입니다. */}
+        <div
+          className={`rounded-lg px-3 py-2 text-sm max-w-xs md:max-w-md ${
+            isOwnMessage
+              ? "bg-blue-500 text-white" // 내가 보낸 메시지는 파란색 배경에 흰 글씨
+              : "bg-gray-200 dark:bg-gray-700" // 상대방 메시지는 회색 배경
+          }`}
+        >
+          
+          {/* 메시지 종류에 따라 다르게 보여줄 내용을 여기에 넣습니다. */}
+          {renderContent()}
+
+          {/* 메시지를 보낸 시간을 보여줍니다. */}
+          <p className="text-xs opacity-70 mt-1 text-right">
+            {/* 
+              Firebase에서 가져온 시간 정보는 특별한 형태라서,
+              `toDate()`라는 기능을 써서 우리가 아는 시간 형태로 바꿔줘야 합니다.
+              혹시 시간 정보가 아직 준비되지 않았을 수도 있으니, 안전하게 확인하고 보여줍니다.
+            */}
+            {msg.timestamp?.toDate ? new Date(msg.timestamp.toDate()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+          </p>
+        </div>
       </div>
 
       {/* 내가 보낸 메시지일 때만 오른쪽에 내 프로필 사진을 보여줍니다. */}

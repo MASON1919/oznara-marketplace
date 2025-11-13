@@ -77,6 +77,7 @@ export default function ChatPage({ params: paramsPromise }) { // `params`라는 
     handleFileSelect, // 파일을 선택했을 때 처리하는 기능
     handleSendLocation, // 위치 정보를 보내는 기능
     listingDetails,   // 현재 채팅방과 연결된 상품의 상세 정보
+    chatRoomData,     // [추가] 채팅방 문서의 실시간 데이터
   } = useChat(resolvedChatRoomId, initialOtherUser, listingId); // 채팅방 ID, 초기 상대방 정보, 상품 ID를 `useChat` 훅에 전달합니다.
 
   // 위치 선택 팝업창(모달)이 열려있는지 닫혀있는지 상태를 관리하는 변수입니다.
@@ -143,7 +144,8 @@ export default function ChatPage({ params: paramsPromise }) { // `params`라는 
             messages={messages} 
             session={session} 
             otherUser={otherUser} 
-            messagesEndRef={messagesEndRef} 
+            messagesEndRef={messagesEndRef}
+            chatRoomData={chatRoomData} // [추가]
           />
         </CardContent>
         <CardFooter className="p-4">

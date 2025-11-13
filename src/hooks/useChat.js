@@ -28,10 +28,25 @@ export const useChat = (chatRoomId, initialOtherUser, passedListingId) => {
   const messagesEndRef = useRef(null);
   const [listingDetails, setListingDetails] = useState(null);
   const [currentListingId, setCurrentListingId] = useState(null);
+  const [chatRoomData, setChatRoomData] = useState(null); // [추가] 채팅방 데이터 상태
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // [추가] 채팅방 문서 실시간 구독
+  useEffect(() => {
+    if (!chatRoomId) return;
+    const chatRoomRef = doc(db, "chatrooms", chatRoomId);
+    const unsubscribe = onSnapshot(chatRoomRef, (doc) => {
+      if (doc.exists()) {
+        setChatRoomData(doc.data());
+      } else {
+        setChatRoomData(null);
+      }
+    });
+    return () => unsubscribe();
+  }, [chatRoomId]);
 
   // [로직 보강] otherUser 정보가 없을 때 Firestore에서 조회
   useEffect(() => {
@@ -111,10 +126,22 @@ export const useChat = (chatRoomId, initialOtherUser, passedListingId) => {
     }
   }, [currentListingId]);
 
-  // Firestore 메시지 실시간 구독
+  // Firestore 메시지 실시간 구독 및 마지막 읽은 시간 업데이트 통합 로직
   useEffect(() => {
-    if (!chatRoomId) return;
+    if (!chatRoomId || !session?.user?.id) return;
 
+    const chatRoomRef = doc(db, "chatrooms", chatRoomId);
+    const userId = session.user.id;
+
+    // lastRead 타임스탬프를 업데이트하는 함수
+    const updateLastRead = () => {
+      // 탭이 활성화 상태일 때만 업데이트
+      if (document.visibilityState === 'visible') {
+        updateDoc(chatRoomRef, { [`lastRead.${userId}`]: serverTimestamp() });
+      }
+    };
+
+    // 1. 메시지 컬렉션 구독 설정
     const messagesCollection = collection(
       db,
       "chatrooms",
@@ -139,20 +166,25 @@ export const useChat = (chatRoomId, initialOtherUser, passedListingId) => {
         };
       });
       setMessages(msgs);
+      // 2. 새 메시지 도착 시, 탭이 활성화 상태라면 lastRead 업데이트
+      updateLastRead();
     });
 
+    // 3. 컴포넌트 마운트 시 또는 chatRoomId/session 변경 시 즉시 업데이트
+    updateLastRead();
+
+    // 4. 탭 활성화 상태 변경 시 업데이트 이벤트 리스너 추가
+    document.addEventListener('visibilitychange', updateLastRead);
+
+    // 클린업 함수: 구독 및 이벤트 리스너 해제
     return () => {
       unsubscribeMessages();
+      document.removeEventListener('visibilitychange', updateLastRead);
+      setMessages([]); // [추가] 컴포넌트 언마운트 시 메시지 목록 초기화
     };
-  }, [chatRoomId]);
-
-  // 마지막 읽은 시간 업데이트
-  useEffect(() => {
-    if (!chatRoomId || !session?.user?.id) return;
-    const chatRoomRef = doc(db, "chatrooms", chatRoomId);
-    const userId = session.user.id;
-    updateDoc(chatRoomRef, { [`lastRead.${userId}`]: serverTimestamp() });
   }, [chatRoomId, session?.user?.id]);
+
+
 
   const handleSendMessage = useCallback(
     async (e) => {
@@ -203,7 +235,7 @@ export const useChat = (chatRoomId, initialOtherUser, passedListingId) => {
 
       setNewMessage("");
     },
-    [chatRoomId, newMessage, session]
+    [chatRoomId, newMessage, session, otherUser, currentListingId] // 의존성 배열 업데이트
   );
 
   const handleImageUpload = useCallback(
@@ -315,5 +347,6 @@ export const useChat = (chatRoomId, initialOtherUser, passedListingId) => {
     handleFileSelect,
     handleSendLocation,
     listingDetails,
+    chatRoomData, // [추가]
   };
 };
