@@ -28,25 +28,53 @@ export default function NotificationToast() {
           newNotifications.forEach((notification) => {
             shownNotifications.current.add(notification.id);
 
-            toast.success(
-              `🎉 ${notification.listing.title}이(가) 다시 판매중입니다!`,
-              {
-                description: `${notification.listing.price.toLocaleString()}원 · 지금 바로 확인하세요!`,
-                duration: 5000,
-                action: {
-                  label: "보러가기",
-                  onClick: async () => {
-                    // 알림 삭제
-                    await fetch("/api/notifications", {
-                      method: "PATCH",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ notificationId: notification.id }),
-                    });
-                    router.push(`/listings/${notification.listingId}`);
+            // 알림 타입에 따라 다른 메시지 표시
+            if (notification.type === "CANCEL_RESERVATION") {
+              // 예약 취소 알림
+              toast.success(
+                `🎉 ${notification.listing.title}이(가) 다시 판매중입니다!`,
+                {
+                  description: `${notification.listing.price.toLocaleString()}원 · 지금 바로 확인하세요!`,
+                  duration: 5000,
+                  action: {
+                    label: "보러가기",
+                    onClick: async () => {
+                      await fetch("/api/notifications", {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          notificationId: notification.id,
+                        }),
+                      });
+                      router.push(`/listings/${notification.listingId}`);
+                    },
                   },
-                },
-              }
-            );
+                }
+              );
+            } else if (notification.type === "PURCHASE_REQUEST") {
+              // 구매 요청 알림
+              toast.info(
+                `🛒 ${notification.buyer?.name || "구매자"}님의 구매 요청`,
+                {
+                  description: `${notification.listing.title} · 마이페이지에서 확인하세요!`,
+                  duration: 5000,
+                  action: {
+                    label: "확인하기",
+                    onClick: async () => {
+                      // 알림 삭제
+                      await fetch("/api/notifications", {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          notificationId: notification.id,
+                        }),
+                      });
+                      router.push(`/mypage`);
+                    },
+                  },
+                }
+              );
+            }
           });
         }
       } catch (error) {

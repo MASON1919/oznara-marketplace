@@ -83,13 +83,13 @@ export default function ProfilePanel() {
     }
   }, [tab]);
 
-  // 구매 요청 가져오기
+  // 구매 요청 가져오기 (통합 API 사용)
   const fetchPurchaseRequests = async () => {
     try {
-      const response = await fetch("/api/mypage/purchase-requests");
+      const response = await fetch("/api/notifications?type=PURCHASE_REQUEST");
       if (response.ok) {
         const data = await response.json();
-        setPurchaseRequests(data.requests || []);
+        setPurchaseRequests(data.notifications || []);
         setPurchaseCount(data.count || 0);
       }
     } catch (error) {
@@ -100,29 +100,24 @@ export default function ProfilePanel() {
   // 채팅방 목록 가져오기
   const fetchChatRooms = async () => {
     try {
-      console.log("📞 채팅방 조회 시작...");
       const response = await fetch("/api/chat/rooms");
-      console.log("📡 API 응답 상태:", response.status);
 
       if (response.ok) {
         const data = await response.json();
-        console.log("✅ 채팅방 데이터:", data);
-        console.log("📊 채팅방 개수:", data.chatRooms?.length);
-
         setChatRooms(data.chatRooms || []);
         setMessageCount(data.chatRooms?.length || 0);
-      } else {
-        console.error("❌ API 에러:", response.status, response.statusText);
       }
     } catch (error) {
-      console.error("❌ 채팅방 조회 실패:", error);
+      console.error("채팅방 조회 실패:", error);
     }
   };
 
-  // 알림 가져오기 함수
+  // 알림 가져오기 함수 (예약 취소 알림만)
   const fetchNotifications = async () => {
     try {
-      const response = await fetch("/api/notifications");
+      const response = await fetch(
+        "/api/notifications?type=CANCEL_RESERVATION"
+      );
       if (response.ok) {
         const data = await response.json();
         setNotificationCount(data.count);
@@ -145,6 +140,23 @@ export default function ProfilePanel() {
 
       // 상품 페이지로 이동
       window.location.href = `/listings/${notification.listingId}`;
+    } catch (error) {
+      console.error("알림 처리 실패:", error);
+    }
+  };
+
+  // 구매 요청 클릭 핸들러 (NEW!)
+  const handlePurchaseRequestClick = async (request) => {
+    try {
+      // 알림 삭제
+      await fetch("/api/notifications", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notificationId: request.id }),
+      });
+
+      // 상품 페이지로 이동
+      window.location.href = `/listings/${request.listingId}`;
     } catch (error) {
       console.error("알림 처리 실패:", error);
     }
@@ -654,9 +666,7 @@ export default function ProfilePanel() {
                 <Card
                   key={request.id}
                   className="p-3 cursor-pointer hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 transition-all border-l-4 border-l-green-500"
-                  onClick={() =>
-                    (window.location.href = `/listings/${request.listingId}`)
-                  }
+                  onClick={() => handlePurchaseRequestClick(request)}
                 >
                   <div className="flex items-start gap-3">
                     <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center flex-shrink-0">

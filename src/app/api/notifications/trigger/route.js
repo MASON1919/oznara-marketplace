@@ -27,9 +27,12 @@ export async function POST(request) {
       );
     }
 
-    // 해당 상품의 대기 알림 조회
+    // 해당 상품의 대기 알림 조회 (예약 취소 알림만)
     const notifications = await prisma.waitingNotification.findMany({
-      where: { listingId },
+      where: {
+        listingId,
+        type: "CANCEL_RESERVATION", // 예약 취소 알림만
+      },
       include: {
         user: {
           select: {

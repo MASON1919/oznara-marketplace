@@ -5,11 +5,12 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import ListingCarousel from "@/components/ListingPage/ListingCarousel";
 import PurchaseForm from "@/components/ListingPage/PurchaseForm";
 import ListingDescription from "@/components/ListingPage/ListingDescription";
-import ChatButton from "@/components/chat/ChatButton";
 import EditButton from "@/components/ListingPage/EditButton";
 import DeleteButton from "@/components/ListingPage/DeleteButton";
 import RecentlyViewedTracker from "@/components/ListingPage/RecentlyViewedTracker";
 import SoldOutOverlay from "@/components/ListingPage/SoldOutOverlay";
+import { cookies } from "next/headers";
+import { redis } from "@/lib/redis";
 
 export default async function ListingPage({ params }) {
   // URL 파라미터에서 상품 ID를 가져옵니다.
@@ -24,24 +25,48 @@ export default async function ListingPage({ params }) {
 
   const listingInfo = await prisma.listing.findUnique({
     where: { id },
-    include: {
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      price: true,
+      category: true,
+      method: true,
+      userId: true,
+      viewCount: true,
+      likeCount: true,
+      createdAt: true, // ✅ 등록 시간 추가
       listingImages: {
         select: { s3Key: true },
       },
       likes: userId
         ? {
-            // 사용자가 로그인되어 있다면 좋아요 여부를 확인합니다.
             where: { userId: userId },
             select: { userId: true },
             take: 1,
           }
-        : false, // 로그인되어 있지 않다면 좋아요 정보를 가져오지 않습니다.
+        : false,
       transaction: {
         orderBy: { createdAt: "desc" },
         take: 1,
       },
     },
   });
+  // id 는 상품의 id
+  const cookieStore = await cookies();
+  const anonId = cookieStore.get("oz_anon")?.value;
+  const seenKey = `seen:${id}:${anonId}`;
+  const firstSeen = await redis.set(seenKey, "1", { nx: true, ex: 60 * 60 });
+
+  if (firstSeen) {
+    await prisma.listing.update({
+      where: { id },
+      data: {
+        viewCount: { increment: 1 },
+      },
+    });
+    listingInfo.viewCount += 1;
+  }
 
   // S3 키를 사용하여 이미지 URL을 생성합니다.
 

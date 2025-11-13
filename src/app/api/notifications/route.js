@@ -18,6 +18,9 @@ export async function GET(request) {
       );
     }
 
+    const { searchParams } = new URL(request.url);
+    const type = searchParams.get("type"); // CANCEL_RESERVATION or PURCHASE_REQUEST
+
     const userId = session.user.id;
 
     // createdAt으로 최근 알림만 조회 (24시간 이내)
@@ -27,6 +30,7 @@ export async function GET(request) {
       where: {
         userId: userId,
         createdAt: { gte: oneDayAgo },
+        ...(type && { type }), // type이 있으면 필터링
       },
       include: {
         listing: {
@@ -34,6 +38,20 @@ export async function GET(request) {
             id: true,
             title: true,
             price: true,
+          },
+        },
+        buyer: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+          },
+        },
+        transaction: {
+          select: {
+            id: true,
+            status: true,
           },
         },
       },

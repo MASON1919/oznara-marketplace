@@ -16,16 +16,29 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="ko">
-      <body>
+      <body className="bg-gray-50">
         <KakaoMapsScriptProvider>
           <Providers>
             <Toaster richColors position="top-center" />
             <NotificationToast />
-            <header>
+
+            {/* 헤더 - 고정 + 그림자 */}
+            <header className="sticky top-0 z-50 bg-white shadow-sm">
               <Navbar />
             </header>
-            <main>{children}</main>
-            <RecentlyViewed />
+
+            {/* 메인 컨텐츠 - 여백 추가 */}
+            <main className="min-h-screen pb-20">
+              {/* 컨텐츠 컨테이너 */}
+              <div className="mx-auto px-4 sm:px-6 lg:px-8">{children}</div>
+            </main>
+
+            {/* 최근 본 상품 - 고정 위치 */}
+            <div className="fixed bottom-24 right-6 z-40">
+              <RecentlyViewed />
+            </div>
+
+            {/* 푸터 */}
             <FooterGate>
               <Footer />
             </FooterGate>

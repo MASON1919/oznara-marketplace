@@ -55,19 +55,41 @@ export async function PATCH(request, { params }) {
     const latestTransaction = listing.transaction[0];
 
     if (status === "OnSale") {
-      // 판매중으로 변경: 기존 거래 취소
+      // 판매중으로 변경: 기존 거래 취소 & 알림 삭제
       if (latestTransaction && latestTransaction.status !== "Canceled") {
-        await prisma.transaction.update({
-          where: { id: latestTransaction.id },
-          data: { status: "Canceled" },
+        await prisma.$transaction(async (tx) => {
+          // 1. Transaction 취소
+          await tx.transaction.update({
+            where: { id: latestTransaction.id },
+            data: { status: "Canceled" },
+          });
+
+          // 2. 구매 요청 알림 삭제
+          await tx.waitingNotification.deleteMany({
+            where: {
+              transactionId: latestTransaction.id,
+              type: "PURCHASE_REQUEST",
+            },
+          });
         });
       }
     } else if (status === "SoldOut") {
-      // 판매완료로 변경: 기존 거래를 완료 처리
+      // 판매완료로 변경: 기존 거래 완료 & 알림 삭제
       if (latestTransaction && latestTransaction.status === "Pending") {
-        await prisma.transaction.update({
-          where: { id: latestTransaction.id },
-          data: { status: "Completed" },
+        await prisma.$transaction(async (tx) => {
+          // 1. Transaction 완료
+          await tx.transaction.update({
+            where: { id: latestTransaction.id },
+            data: { status: "Completed" },
+          });
+
+          // 2. 구매 요청 알림 삭제
+          await tx.waitingNotification.deleteMany({
+            where: {
+              transactionId: latestTransaction.id,
+              type: "PURCHASE_REQUEST",
+            },
+          });
         });
       } else {
         return NextResponse.json(
