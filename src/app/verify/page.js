@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
+import { Link } from "next/link";
 
 export default function VerifyPage() {
   const [status, setStatus] = useState("loading"); // loading | success | error
@@ -62,10 +63,10 @@ export default function VerifyPage() {
           <p className="text-red-600">{message}</p>
           <div className="flex gap-3 justify-center">
             <Button asChild variant="outline">
-              <a href="/">홈으로</a>
+              <Link href="/">홈으로</Link>
             </Button>
             <Button asChild>
-              <a href="/signup">회원가입 다시 시도</a>
+              <Link href="/signup">회원가입 다시 시도</Link>
             </Button>
           </div>
         </>
