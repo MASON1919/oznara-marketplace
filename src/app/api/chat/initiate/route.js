@@ -43,10 +43,11 @@ export async function POST(request) {
   const { sellerId, listingId } = await request.json();
   const buyerId = session.user.id;
 
-  if (!sellerId) {
+  // [수정] 유효성 검사: sellerId와 listingId가 모두 있는지 확인합니다.
+  if (!sellerId || !listingId) {
     return NextResponse.json(
-      { error: "판매자 ID가 필요합니다." },
-      { status: 400 }
+      { error: "판매자 ID와 상품 ID가 모두 필요합니다." },
+      { status: 400 } // 400은 "잘못된 요청" 에러 코드입니다.
     );
   }
 
@@ -54,7 +55,7 @@ export async function POST(request) {
   // 이 상품의 구매자(예약자)를 찾아서 그 사람과 채팅방을 만듭니다.
   let otherUserId = sellerId; // 기본값: 판매자와 채팅
 
-  if (sellerId === buyerId && listingId) {
+  if (sellerId === buyerId) {
     // 상품의 거래 정보에서 구매자를 찾습니다
     const transaction = await prisma.transaction.findFirst({
       where: {
@@ -81,7 +82,8 @@ export async function POST(request) {
     otherUserId = transaction.buyerId; // 구매자와 채팅
   }
 
-  const chatRoomId = [buyerId, otherUserId].sort().join("-");
+  // [수정] 채팅방 ID 생성 로직: 사용자 ID와 상품 ID를 모두 조합하여 고유 ID를 만듭니다.
+  const chatRoomId = [buyerId, otherUserId, listingId].sort().join("-");
 
   try {
     const chatRoomRef = doc(db, "chatrooms", chatRoomId);
@@ -90,6 +92,7 @@ export async function POST(request) {
     if (!chatRoomSnap.exists()) {
       await setDoc(chatRoomRef, {
         participants: [buyerId, otherUserId],
+        listingId: listingId, // 채팅방과 연결된 상품 ID
         createdAt: serverTimestamp(),
         lastMessageTimestamp: serverTimestamp(),
         lastRead: {
@@ -115,7 +118,7 @@ export async function POST(request) {
     // 만약 판매자 정보를 찾을 수 없다면, "판매자를 찾을 수 없습니다"라는 에러를 보냅니다.
     if (!otherUser) {
       return NextResponse.json(
-        { error: "판매자를 찾을 수 없습니다." },
+        { error: "상대방 정보를 찾을 수 없습니다." },
         { status: 404 }
       ); // 404는 "찾을 수 없음" 에러 코드입니다.
     }

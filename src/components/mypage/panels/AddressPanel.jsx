@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
+import AddressSearchMap from "@/components/AddressSearchMap";
 
 import {
     Sheet,
@@ -141,30 +142,52 @@ export default function AddressPanel({ onClose }) {
         </div>
     );
 
-    // ========================= 렌더 =========================
-    return (
-        <Sheet open={true} onOpenChange={onClose}>
-            <SheetContent side="right" className="w-full md:max-w-xl z-[1000]">
-
-                {/* 상단 버튼 */}
-                {currentPage === "manage" ? (
+    const renderTopButton = () => {
+        switch (currentPage) {
+            case "manage":
+                return (
                     <SheetClose className="absolute top-4 left-4 cursor-pointer">
                         <ChevronLeft />
                     </SheetClose>
-                ) : (
+                );
+            case "add":
+            case "edit":
+                return (
                     <button
                         className="absolute top-4 left-4 cursor-pointer"
                         onClick={cancelEdit}
                     >
                         <ChevronLeft />
                     </button>
-                )}
+                );
+            case "search": // 주소 검색 페이지도 뒤로가기 버튼
+                return (
+                    <button
+                        className="absolute top-4 left-4 cursor-pointer"
+                        onClick={() => setCurrentPage("add")}
+                    >
+                        <ChevronLeft />
+                    </button>
+                );
+            default:
+                return null;
+        }
+    };
+
+    // ========================= 렌더 =========================
+    return (
+        <Sheet open={true} onOpenChange={onClose}>
+            <SheetContent side="right" className="w-full md:max-w-xl z-[1000]">
+
+                {/* 상단 버튼 */}
+                {renderTopButton()}
 
                 <SheetHeader className="flex justify-between items-center p-3">
                     <SheetTitle className="mt-1 text-lg">
                         {currentPage === "manage" && "배송지 관리"}
                         {currentPage === "add" && "배송지 추가"}
                         {currentPage === "edit" && "배송지 편집"}
+                        {currentPage === "search" && "주소 검색"}
                     </SheetTitle>
                 </SheetHeader>
                 {/* 관리 페이지 */}
@@ -230,7 +253,8 @@ export default function AddressPanel({ onClose }) {
                                     placeholder="주소검색"
                                     value={form.address}
                                     className="h-12 focus-visible:ring-0 focus-visible:border-input"
-                                    onChange={e => handleFormChange("address", e.target.value)}
+                                    readOnly
+                                    onClick={() => setCurrentPage("search")}
                                 />
                                 <Input
                                     placeholder="상세주소 (예: 101동 101호)"
@@ -253,26 +277,38 @@ export default function AddressPanel({ onClose }) {
                                 </div>
                             </div>
                         )}
-                    </div>
 
-                    {/* 편집 페이지 */}
-                    {currentPage === "edit" && editing && (
-                        <div className="space-y-2 overflow-y-auto h-full">
-                            {addresses.map(addr => (
-                                <AddressCard key={addr.id} addr={addr} showActions={true} />
-                            ))}
+                        {currentPage === "search" && (
+                            <div className="flex flex-col h-full">
 
-                            <div className="flex space-x-2 mt-auto">
-                                <Button
-                                    className="h-12 text-sm w-full"
-                                    onClick={handleEditSave}
-                                    disabled={!isChanged}
-                                >
-                                    편집 완료
-                                </Button>
+                                <AddressSearchMap
+                                    onSelect={(addr) => {
+                                        setForm(prev => ({ ...prev, address: addr }));
+                                        setCurrentPage("add"); // 검색 후 주소 선택 시 추가 페이지로 돌아감
+                                    }}
+                                />
                             </div>
-                        </div>
-                    )}
+                        )}
+
+                        {/* 편집 페이지 */}
+                        {currentPage === "edit" && editing && (
+                            <div className="flex flex-col space-y-2 h-full">
+                                {addresses.map(addr => (
+                                    <AddressCard key={addr.id} addr={addr} showActions={true} />
+                                ))}
+
+                                <div className="flex space-x-2 mt-auto">
+                                    <Button
+                                        className="h-12 text-sm w-full"
+                                        onClick={handleEditSave}
+                                        disabled={!isChanged}
+                                    >
+                                        편집 완료
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
                 <Toaster />
             </SheetContent>

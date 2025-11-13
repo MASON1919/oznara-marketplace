@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 
 // SearchPrice Component (formerly SimpleSearchBar)
-function SearchPrice({ initialQuery }) {
+function SearchPrice() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialQuery = searchParams?.get("query") ?? "";
   const [query, setQuery] = useState(initialQuery || "");
 
   const handleSearch = () => {
@@ -44,9 +46,6 @@ function SearchPrice({ initialQuery }) {
 
 // Main Page Component for /search-price
 export default function SearchPricePage() {
-  const searchParams = useSearchParams();
-  const initialQuery = searchParams.get("query") || "";
-
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold text-center my-6">시세조회</h1>
@@ -56,8 +55,9 @@ export default function SearchPricePage() {
       <p className="text-md text-center text-gray-500 mb-8">
         어떤 시세 정보가 궁금하세요?
       </p>
-
-      <SearchPrice initialQuery={initialQuery} />
+      <Suspense>
+        <SearchPrice />
+      </Suspense>
     </div>
   );
 }
