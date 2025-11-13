@@ -5,15 +5,12 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import ListingCarousel from "@/components/ListingPage/ListingCarousel";
 import PurchaseForm from "@/components/ListingPage/PurchaseForm";
 import ListingDescription from "@/components/ListingPage/ListingDescription";
-import ChatButton from "@/components/chat/ChatButton";
 import EditButton from "@/components/ListingPage/EditButton";
 import DeleteButton from "@/components/ListingPage/DeleteButton";
 import RecentlyViewedTracker from "@/components/ListingPage/RecentlyViewedTracker";
 import SoldOutOverlay from "@/components/ListingPage/SoldOutOverlay";
-import Counting from "@/components/ListingPage/Counting";
 import { cookies } from "next/headers";
 import { redis } from "@/lib/redis";
-import { db } from "@/lib/firebase";
 
 export default async function ListingPage({ params }) {
   // URL 파라미터에서 상품 ID를 가져옵니다.
