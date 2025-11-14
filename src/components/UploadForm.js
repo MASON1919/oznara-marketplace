@@ -1,5 +1,4 @@
 //추후 수정 사항 : 업로드 이미지 중복 방지, db 업로드 실패시에 업로드된 이미지 삭제(선택), 업로드 이미지가 0개여도 등록 가능하게
-
 "use client";
 import { useDropzone } from "react-dropzone";
 import { useCallback, useState } from "react";
@@ -75,43 +74,16 @@ export default function UploadForm() {
   const router = useRouter();
   const handleUpload = async () => {
     try {
-      /*const promises = files.map(async (file) => {
-        const response = await fetch("/api/upload/presigned", {
-          method: "POST",
-          body: JSON.stringify({
-            fileName: file.name,
-            fileType: file.type,
-          }),
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error("Presigned URL 생성 실패");
-        }
-
-        const { url, key } = await response.json();
-
-        const upload = await fetch(url, {
-          method: "PUT",
-          body: file,
-          headers: {
-            "Content-Type": file.type,
-          },
-        });
-
-        if (!upload.ok) {
-          throw new Error("S3 업로드 실패");
-        }
-        return key;
+      const formData = new FormData();
+      files.forEach((file) => {
+        formData.append("images", file);
+      });
+      const response = await fetch(`api/ec2`, {
+        method: "POST",
+        body: formData,
       });
 
-      const keys = await Promise.all(promises);
-      setFiles([]);
-      return keys;*/
-      //업로드용 서버로 변경
-      const formData = new FormData();
+      /*
       files.forEach((file) => {
         formData.append("images", file);
       });
@@ -125,7 +97,7 @@ export default function UploadForm() {
 
       if (!response.ok) {
         throw new Error("업로드 실패");
-      }
+      }*/
 
       const data = await response.json();
       setFiles([]);
