@@ -9,10 +9,10 @@ const globalForS3 = globalThis;
 export const s3Client =
   globalForS3.s3Client ??
   new S3Client({
-    region: process.env.AWS_REGION,
+    region: process.env.AWS_REGION, // 서버 전용
     credentials: {
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID, // 서버 전용
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY, // 서버 전용
     },
   });
 
@@ -26,7 +26,7 @@ export async function getPresignedUrl(fileName, fileType) {
   const key = `products/${Date.now()}-${fileName}`;
 
   const command = new PutObjectCommand({
-    Bucket: process.env.AWS_S3_BUCKET_NAME,
+    Bucket: process.env.NEXT_PUBLIC_AWS_S3_BUCKET_NAME, // 클라이언트에서도 사용 가능하도록 변경
     Key: key,
     ContentType: fileType,
   });
@@ -48,7 +48,7 @@ export async function uploadToS3(buffer, fileType) {
     .substring(7)}`;
 
   const command = new PutObjectCommand({
-    Bucket: process.env.AWS_S3_BUCKET_NAME,
+    Bucket: process.env.NEXT_PUBLIC_AWS_S3_BUCKET_NAME, // 클라이언트에서도 사용 가능하도록 변경
     Key: key,
     Body: buffer,
     ContentType: fileType,
@@ -61,7 +61,7 @@ export async function uploadToS3(buffer, fileType) {
 // S3에서 파일 삭제
 export async function deleteFromS3(key) {
   const command = new DeleteObjectCommand({
-    Bucket: process.env.AWS_S3_BUCKET_NAME,
+    Bucket: process.env.NEXT_PUBLIC_AWS_S3_BUCKET_NAME, // 클라이언트에서도 사용 가능하도록 변경
     Key: key,
   });
 
@@ -70,5 +70,6 @@ export async function deleteFromS3(key) {
 
 // 퍼블릭 접근으로 읽기 용도
 export function getS3Url(key) {
-  return `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+  if (!key) return ""; // key가 없을 경우 빈 문자열 반환
+  return `https://${process.env.NEXT_PUBLIC_AWS_S3_BUCKET_NAME}.s3.${process.env.NEXT_PUBLIC_AWS_REGION}.amazonaws.com/${key}`;
 }
