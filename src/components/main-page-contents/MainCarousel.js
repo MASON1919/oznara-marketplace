@@ -1,5 +1,5 @@
+"use client";
 import Image from "next/image";
-
 import {
   Carousel,
   CarouselContent,
@@ -10,10 +10,10 @@ import {
 import { Sparkles } from "lucide-react";
 
 const images = [
-  "/joonggoImages/1.png",
-  "/joonggoImages/2.png",
-  "/joonggoImages/3.png",
-  "/joonggoImages/4.webp",
+  "/joonggoImages/oznara-main-1.png",
+  "/joonggoImages/oznara-main-2.png",
+  "/joonggoImages/oznara-main-3.png",
+  "/joonggoImages/oznara-main-4.png",
 ];
 
 export function MainCarousel() {
@@ -27,19 +27,16 @@ export function MainCarousel() {
           </div>
           <div>
             <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
-              오늘의 추천
+              오즈나라에 오신 것을 환영합니다! 🎉
             </h2>
             <p className="text-sm text-gray-500">
-              지금 가장 인기 있는 상품들을 확인하세요
+              안전하고 편리한 중고거래를 경험해보세요
             </p>
           </div>
         </div>
       </div>
 
-      <Carousel
-        className="w-full"
-        opts={{ loop: true, autoplay: true, interval: 2000 }}
-      >
+      <Carousel className="w-full" opts={{ loop: true }}>
         <CarouselContent className="-ml-2">
           {images.map((image, index) => (
             <CarouselItem
@@ -59,14 +56,6 @@ export function MainCarousel() {
 
                   {/* 그라데이션 오버레이 */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-                  {/* NEW 배지 (첫 번째 이미지만) */}
-                  {index === 0 && (
-                    <div className="absolute top-4 left-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-2 rounded-full flex items-center gap-2 text-sm font-bold shadow-lg">
-                      <Sparkles className="w-4 h-4" />
-                      NEW
-                    </div>
-                  )}
                 </div>
               </div>
             </CarouselItem>
