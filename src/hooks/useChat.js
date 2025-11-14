@@ -12,9 +12,11 @@ import {
   updateDoc,
   getDoc,
   arrayRemove,
+  setDoc, // setDoc을 import 합니다.
 } from "firebase/firestore";
 
 const getClientSideS3Url = (key) => {
+  if (!key) return "";
   return `https://${process.env.NEXT_PUBLIC_AWS_S3_BUCKET_NAME}.s3.${process.env.NEXT_PUBLIC_AWS_REGION}.amazonaws.com/${key}`;
 };
 
@@ -28,14 +30,26 @@ export const useChat = (chatRoomId, initialOtherUser, passedListingId) => {
   const messagesEndRef = useRef(null);
   const [listingDetails, setListingDetails] = useState(null);
   const [currentListingId, setCurrentListingId] = useState(null);
+  const [chatRoomData, setChatRoomData] = useState(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // [로직 보강] otherUser 정보가 없을 때 Firestore에서 조회
   useEffect(() => {
-    // initialOtherUser가 있거나, chatRoomId 또는 세션 정보가 없으면 실행하지 않음
+    if (!chatRoomId) return;
+    const chatRoomRef = doc(db, "chatrooms", chatRoomId);
+    const unsubscribe = onSnapshot(chatRoomRef, (doc) => {
+      if (doc.exists()) {
+        setChatRoomData(doc.data());
+      } else {
+        setChatRoomData(null);
+      }
+    });
+    return () => unsubscribe();
+  }, [chatRoomId]);
+
+  useEffect(() => {
     if (initialOtherUser || !chatRoomId || !session?.user?.id) {
       return;
     }
@@ -52,11 +66,10 @@ export const useChat = (chatRoomId, initialOtherUser, passedListingId) => {
 
         if (otherUserId) {
           try {
-            // 사용자 정보를 가져오는 API 호출
             const userResponse = await fetch(`/api/users/${otherUserId}`);
             if (userResponse.ok) {
               const userData = await userResponse.json();
-              setOtherUser(userData); // 상태 업데이트
+              setOtherUser(userData);
             } else {
               console.error("상대방 사용자 정보를 가져오는 데 실패했습니다.");
             }
@@ -70,8 +83,6 @@ export const useChat = (chatRoomId, initialOtherUser, passedListingId) => {
     fetchOtherUser();
   }, [chatRoomId, session?.user?.id, initialOtherUser]);
 
-
-  // 1단계 로직: currentListingId 확정
   useEffect(() => {
     if (passedListingId) {
       setCurrentListingId(passedListingId);
@@ -87,7 +98,6 @@ export const useChat = (chatRoomId, initialOtherUser, passedListingId) => {
     }
   }, [chatRoomId, passedListingId]);
 
-  // 2단계 로직: 확정된 currentListingId로 제품 정보 조회
   useEffect(() => {
     if (currentListingId) {
       const fetchListingDetails = async () => {
@@ -111,9 +121,22 @@ export const useChat = (chatRoomId, initialOtherUser, passedListingId) => {
     }
   }, [currentListingId]);
 
-  // Firestore 메시지 실시간 구독
   useEffect(() => {
-    if (!chatRoomId) return;
+    if (!chatRoomId || !session?.user?.id) return;
+
+    const chatRoomRef = doc(db, "chatrooms", chatRoomId);
+    const userId = session.user.id;
+
+    const updateLastRead = () => {
+      if (document.visibilityState === "visible") {
+        // updateDoc을 setDoc으로 변경하여 문서가 없어도 오류가 발생하지 않도록 합니다.
+        setDoc(
+          chatRoomRef,
+          { lastRead: { [userId]: serverTimestamp() } },
+          { merge: true }
+        );
+      }
+    };
 
     const messagesCollection = collection(
       db,
@@ -139,19 +162,17 @@ export const useChat = (chatRoomId, initialOtherUser, passedListingId) => {
         };
       });
       setMessages(msgs);
+      updateLastRead();
     });
+
+    updateLastRead();
+    document.addEventListener("visibilitychange", updateLastRead);
 
     return () => {
       unsubscribeMessages();
+      document.removeEventListener("visibilitychange", updateLastRead);
+      setMessages([]);
     };
-  }, [chatRoomId]);
-
-  // 마지막 읽은 시간 업데이트
-  useEffect(() => {
-    if (!chatRoomId || !session?.user?.id) return;
-    const chatRoomRef = doc(db, "chatrooms", chatRoomId);
-    const userId = session.user.id;
-    updateDoc(chatRoomRef, { [`lastRead.${userId}`]: serverTimestamp() });
   }, [chatRoomId, session?.user?.id]);
 
   const handleSendMessage = useCallback(
@@ -161,25 +182,28 @@ export const useChat = (chatRoomId, initialOtherUser, passedListingId) => {
 
       const chatRoomRef = doc(db, "chatrooms", chatRoomId);
 
-      // [추가] 메시지 보내기 전, 상대방이 채팅을 숨겼는지 확인하고 숨김 해제
       try {
         const chatRoomSnap = await getDoc(chatRoomRef);
         if (chatRoomSnap.exists()) {
           const chatRoomData = chatRoomSnap.data();
-          const otherUserId = chatRoomData.participants.find(p => p !== session.user.id);
+          const otherUserId = chatRoomData.participants.find(
+            (p) => p !== session.user.id
+          );
 
           if (otherUserId && chatRoomData.hiddenFor?.includes(otherUserId)) {
-            // 상대방의 숨김 상태를 해제합니다.
-            await updateDoc(chatRoomRef, {
-              hiddenFor: arrayRemove(otherUserId)
-            });
-            // TODO: 여기에 상대방에게 새로운 메시지가 왔다는 푸시 알림을 보내는 로직을 추가할 수 있습니다.
-            console.log(`채팅방 ${chatRoomId}을(를) 사용자 ${otherUserId}에 대해 다시 활성화했습니다.`);
+            // updateDoc을 setDoc으로 변경합니다.
+            await setDoc(
+              chatRoomRef,
+              { hiddenFor: arrayRemove(otherUserId) },
+              { merge: true }
+            );
+            console.log(
+              `채팅방 ${chatRoomId}을(를) 사용자 ${otherUserId}에 대해 다시 활성화했습니다.`
+            );
           }
         }
       } catch (error) {
         console.error("상대방의 채팅방 숨김 해제 중 오류 발생:", error);
-        // 오류가 발생하더라도 메시지 전송은 계속 시도합니다.
       }
 
       const messagesCollection = collection(
@@ -195,15 +219,20 @@ export const useChat = (chatRoomId, initialOtherUser, passedListingId) => {
         timestamp: serverTimestamp(),
       });
 
-      await updateDoc(chatRoomRef, {
-        lastMessageTimestamp: serverTimestamp(),
-        lastMessageSenderId: session.user.id,
-        lastMessage: newMessage,
-      });
+      // updateDoc을 setDoc으로 변경합니다.
+      await setDoc(
+        chatRoomRef,
+        {
+          lastMessageTimestamp: serverTimestamp(),
+          lastMessageSenderId: session.user.id,
+          lastMessage: newMessage,
+        },
+        { merge: true }
+      );
 
       setNewMessage("");
     },
-    [chatRoomId, newMessage, session]
+    [chatRoomId, newMessage, session, otherUser, currentListingId]
   );
 
   const handleImageUpload = useCallback(
@@ -242,11 +271,16 @@ export const useChat = (chatRoomId, initialOtherUser, passedListingId) => {
         });
 
         const chatRoomRef = doc(db, "chatrooms", chatRoomId);
-        await updateDoc(chatRoomRef, {
-          lastMessageTimestamp: serverTimestamp(),
-          lastMessageSenderId: session.user.id,
-          lastMessage: "사진",
-        });
+        // updateDoc을 setDoc으로 변경합니다.
+        await setDoc(
+          chatRoomRef,
+          {
+            lastMessageTimestamp: serverTimestamp(),
+            lastMessageSenderId: session.user.id,
+            lastMessage: "사진",
+          },
+          { merge: true }
+        );
       } catch (error) {
         console.error("이미지 업로드 중 오류 발생: ", error);
         alert("이미지 업로드에 실패했습니다.");
@@ -292,11 +326,16 @@ export const useChat = (chatRoomId, initialOtherUser, passedListingId) => {
       });
 
       const chatRoomRef = doc(db, "chatrooms", chatRoomId);
-      await updateDoc(chatRoomRef, {
-        lastMessageTimestamp: serverTimestamp(),
-        lastMessageSenderId: session.user.id,
-        lastMessage: location.addressName,
-      });
+      // updateDoc을 setDoc으로 변경합니다.
+      await setDoc(
+        chatRoomRef,
+        {
+          lastMessageTimestamp: serverTimestamp(),
+          lastMessageSenderId: session.user.id,
+          lastMessage: location.addressName,
+        },
+        { merge: true }
+      );
     },
     [chatRoomId, session]
   );
@@ -315,5 +354,6 @@ export const useChat = (chatRoomId, initialOtherUser, passedListingId) => {
     handleFileSelect,
     handleSendLocation,
     listingDetails,
+    chatRoomData,
   };
 };

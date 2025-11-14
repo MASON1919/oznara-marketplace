@@ -10,7 +10,7 @@ import { prisma } from "@/lib/prisma";
  * @param {string} context.params.id - 조회할 사용자의 고유 ID
  */
 export async function GET(request, { params }) {
-  const { id } = params;
+  const { id } = await params;
 
   if (!id) {
     return NextResponse.json({ error: "사용자 ID가 필요합니다." }, { status: 400 });

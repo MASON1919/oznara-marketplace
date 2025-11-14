@@ -13,7 +13,7 @@ import Message from "./Message";
  * @param {object} props.otherUser - 채팅 상대방의 정보
  * @param {React.RefObject} props.messagesEndRef - 메시지 목록의 맨 아래를 가리키는 참조 (새 메시지가 오면 자동으로 스크롤하기 위함)
  */
-const MessageList = ({ messages, session, otherUser, messagesEndRef }) => {
+const MessageList = ({ messages, session, otherUser, messagesEndRef, chatRoomData }) => {
   // 화면에 보여줄 메시지 목록입니다.
   return (
     // 메시지들 사이에 적당한 간격을 줍니다.
@@ -22,9 +22,22 @@ const MessageList = ({ messages, session, otherUser, messagesEndRef }) => {
         `messages` 목록에 있는 메시지들을 하나씩 꺼내서 `Message`라는 부품으로 만들어서 보여줍니다.
         `key={msg.id}`는 React가 각 메시지를 효율적으로 관리하기 위해 필요한 고유한 이름표입니다.
       */}
-      {messages.map((msg) => (
-        <Message key={msg.id} msg={msg} session={session} otherUser={otherUser} />
-      ))}
+      {messages.map((msg) => {
+        // [추가] 메시지 '읽음' 상태를 계산하는 로직
+        let isRead = false;
+        // 내가 보낸 메시지이고, 상대방 정보와 채팅방 정보가 모두 있을 경우에만 계산
+        if (msg.senderId === session.user.id && otherUser && chatRoomData?.lastRead) {
+          const messageTimestamp = msg.timestamp?.toDate();
+          const otherUserLastReadTimestamp = chatRoomData.lastRead[otherUser.id]?.toDate();
+
+          // 메시지 시간과 상대방의 마지막 읽은 시간이 모두 유효할 경우 비교
+          if (messageTimestamp && otherUserLastReadTimestamp) {
+            isRead = messageTimestamp <= otherUserLastReadTimestamp;
+          }
+        }
+
+        return <Message key={msg.id} msg={msg} session={session} otherUser={otherUser} isRead={isRead} />;
+      })}
       {/* 
         이 빈 공간은 항상 메시지 목록의 맨 마지막에 있습니다.
         새로운 메시지가 오면 이 공간이 화면에 보이도록 자동으로 스크롤해서,

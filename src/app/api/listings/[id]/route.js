@@ -16,7 +16,7 @@ import { getS3Url } from '@/lib/s3'; // S3 이미지 URL을 생성하는 헬퍼 
 export async function GET(request, context) {
   try {
     // URL 파라미터에서 상품 ID를 추출합니다.
-    const { id } = context.params;
+    const { id } = await context.params;
 
     // Prisma를 사용하여 데이터베이스에서 상품 정보를 조회합니다.
     // 상품의 제목과 연결된 이미지 정보(s3Key)를 함께 가져옵니다.
