@@ -33,8 +33,8 @@ export default function RootLayout({ children }) {
               <div className="mx-auto px-4 sm:px-6 lg:px-8">{children}</div>
             </main>
 
-            {/* 최근 본 상품 - 고정 위치 */}
-            <div className="fixed bottom-24 right-6 z-40">
+            {/* 최근 본 상품 - 고정 위치 (데스크톱만) */}
+            <div className="hidden lg:block fixed bottom-24 right-6 z-40">
               <RecentlyViewed />
             </div>
 

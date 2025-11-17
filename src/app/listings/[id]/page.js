@@ -116,27 +116,32 @@ export default async function ListingPage({ params }) {
         imageUrl={s3Urls[0]} // 첫 번째 이미지 (커버 이미지)
       />
 
-      <div className="flex gap-16 items-start">
+      {/* 모바일: 세로 배치, 데스크톱: 가로 배치 */}
+      <div className="flex flex-col lg:flex-row gap-8 lg:gap-16 items-start">
         {/* 상품 이미지 캐러셀 컴포넌트 */}
-        <ListingCarousel listingInfo={listingInfo} s3Urls={s3Urls} />
+        <div className="w-full lg:w-[600px]">
+          <ListingCarousel listingInfo={listingInfo} s3Urls={s3Urls} />
+        </div>
         {/* 구매 관련 폼 컴포넌트 */}
-        <PurchaseForm
-          listingInfo={listingInfo}
-          initialLike={listingInfo.likes.length > 0}
-          status={status}
-          hasTransaction={
-            !!latestTransaction && latestTransaction.status !== "Canceled"
-          }
-          isSeller={userId === listingInfo.userId}
-          isBuyer={isBuyer}
-        />
+        <div className="w-full lg:flex-1">
+          <PurchaseForm
+            listingInfo={listingInfo}
+            initialLike={listingInfo.likes.length > 0}
+            status={status}
+            hasTransaction={
+              !!latestTransaction && latestTransaction.status !== "Canceled"
+            }
+            isSeller={userId === listingInfo.userId}
+            isBuyer={isBuyer}
+          />
+        </div>
       </div>
       {/* 상품 설명 컴포넌트 */}
       <ListingDescription description={listingInfo.description} />
 
       {/* 수정/삭제 버튼 영역: 판매자만 자신의 게시글을 수정하거나 삭제할 수 있습니다 */}
       {userId && userId === listingInfo.userId && (
-        <div className="mt-4 flex gap-3">
+        <div className="mt-4 flex flex-col sm:flex-row gap-3">
           {/* 게시글 수정 버튼 */}
           <div className="flex-1">
             <EditButton listingId={id} />

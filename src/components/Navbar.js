@@ -10,11 +10,13 @@ import {
   User,
   LogOut,
   TrendingUp,
+  Menu,
+  X,
 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useChat } from "@/components/chat/ChatContext";
@@ -37,6 +39,7 @@ export function Navbar() {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // 스크롤 감지
   useEffect(() => {
@@ -68,20 +71,20 @@ export function Navbar() {
         scrolled ? "shadow-lg border-b" : "shadow-sm"
       }`}
     >
-      <div className="max-w-7xl mx-auto px-6 py-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
         {/* 상단 행 */}
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-4 sm:gap-8">
             {/* 맨 왼쪽: NEXTRUNNERS 로고 */}
             <motion.div
               whileHover={{ scale: 1.05 }}
-              className="relative shrink-0"
+              className="relative shrink-0 hidden sm:block"
             >
               <Image
                 src="/joonggoImages/nextrunners-logo.png"
                 alt="NEXTRUNNERS"
-                width={140}
-                height={45}
+                width={120}
+                height={40}
                 className="object-contain"
               />
             </motion.div>
@@ -93,19 +96,22 @@ export function Navbar() {
                 whileTap={{ scale: 0.95 }}
                 className="flex items-center gap-2"
               >
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                  <ShoppingBag className="w-6 h-6 text-white" />
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
-                <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                   오즈나라
                 </span>
               </motion.div>
             </Link>
           </div>
 
-          {/* 검색바 */}
-          <form onSubmit={onSubmit} className="flex-1 max-w-2xl mx-8">
-            <div className="relative group">
+          {/* 검색바 - 데스크톱만 */}
+          <form
+            onSubmit={onSubmit}
+            className="hidden lg:flex flex-1 max-w-2xl mx-8"
+          >
+            <div className="relative group w-full">
               <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
               <Input
                 value={query}
@@ -124,8 +130,8 @@ export function Navbar() {
             </div>
           </form>
 
-          {/* 우측 메뉴 */}
-          <div className="flex items-center gap-2">
+          {/* 우측 메뉴 - 데스크톱만 */}
+          <div className="hidden lg:flex items-center gap-2">
             {session?.user ? (
               <>
                 <NavButton href="/upload" icon={<ShoppingBag />}>
@@ -171,10 +177,36 @@ export function Navbar() {
               </>
             )}
           </div>
+
+          {/* 모바일 햄버거 메뉴 */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="lg:hidden p-2"
+          >
+            {mobileMenuOpen ? (
+              <X className="w-6 h-6" />
+            ) : (
+              <Menu className="w-6 h-6" />
+            )}
+          </button>
         </div>
 
-        {/* 하단 네비게이션 */}
-        <div className="flex items-center gap-6">
+        {/* 모바일 검색바 */}
+        <form onSubmit={onSubmit} className="lg:hidden mb-4">
+          <div className="relative group">
+            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="상품 검색..."
+              className="pl-10 pr-4 py-2 rounded-full border-2"
+              autoComplete="off"
+            />
+          </div>
+        </form>
+
+        {/* 하단 네비게이션 - 데스크톱만 */}
+        <div className="hidden lg:flex items-center gap-6">
           <NavigationMenu>
             <NavigationMenuList className="flex items-center gap-0">
               <NavigationMenuItem>
@@ -268,6 +300,94 @@ export function Navbar() {
             </NavigationMenuList>
           </NavigationMenu>
         </div>
+
+        {/* 모바일 메뉴 */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="lg:hidden border-t mt-4 pt-4"
+            >
+              <div className="flex flex-col gap-2">
+                <Link
+                  href="/"
+                  className="px-4 py-2 hover:bg-gray-100 rounded-lg"
+                >
+                  홈
+                </Link>
+                <Link
+                  href="/my/likes"
+                  className="px-4 py-2 hover:bg-gray-100 rounded-lg flex items-center gap-2"
+                >
+                  <Heart className="w-4 h-4" />
+                  찜한상품
+                </Link>
+                <Link
+                  href="/search-price"
+                  className="px-4 py-2 hover:bg-gray-100 rounded-lg flex items-center gap-2"
+                >
+                  <TrendingUp className="w-4 h-4" />
+                  시세조회
+                </Link>
+
+                {session?.user ? (
+                  <>
+                    <Link
+                      href="/upload"
+                      className="px-4 py-2 hover:bg-gray-100 rounded-lg flex items-center gap-2"
+                    >
+                      <ShoppingBag className="w-4 h-4" />
+                      판매하기
+                    </Link>
+                    <Link
+                      href="/chat-list"
+                      className="px-4 py-2 hover:bg-gray-100 rounded-lg flex items-center gap-2"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      채팅
+                      {unreadChatsCount > 0 && (
+                        <Badge variant="destructive" className="ml-auto">
+                          {unreadChatsCount}
+                        </Badge>
+                      )}
+                    </Link>
+                    <Link
+                      href="/mypage"
+                      className="px-4 py-2 hover:bg-gray-100 rounded-lg flex items-center gap-2"
+                    >
+                      <User className="w-4 h-4" />
+                      내정보
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="px-4 py-2 hover:bg-gray-100 rounded-lg flex items-center gap-2 text-red-600"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      로그아웃
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href="/login"
+                      className="px-4 py-2 hover:bg-gray-100 rounded-lg"
+                    >
+                      로그인
+                    </Link>
+                    <Link
+                      href="/signup"
+                      className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg text-center"
+                    >
+                      회원가입
+                    </Link>
+                  </>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </motion.nav>
   );
