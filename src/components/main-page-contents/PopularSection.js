@@ -44,7 +44,11 @@ export default async function PopularSection() {
     const s3Urls = popularListings.map((listing) => {
       return getS3Url(listing.listingImages[0].s3Key);
     });
-    await redis.set("popularListings", { popularListings, s3Urls }, { ex: 5 });
+    await redis.set(
+      "popularListings",
+      { popularListings, s3Urls },
+      { ex: 60 * 5 }
+    );
     return (
       <div className="my-4 px-4 flex flex-col items-start">
         <PopularCarousel popularListings={popularListings} s3Urls={s3Urls} />
